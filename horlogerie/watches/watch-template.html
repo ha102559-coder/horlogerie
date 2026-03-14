@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- SEO meta tags injected by JS below -->
+<title>Loading... — HORLOGERIE</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .gallery { display:grid; grid-template-columns:1fr 80px; gap:12px; }
+  .gallery-main { aspect-ratio:4/3; overflow:hidden; background:#0f0f0f; cursor:zoom-in; }
+  .gallery-main img { width:100%; height:100%; object-fit:cover; transition:transform .4s; }
+  .gallery-main img:hover { transform:scale(1.04); }
+  .gallery-thumbs { display:flex; flex-direction:column; gap:8px; overflow-y:auto; max-height:400px; }
+  .thumb { aspect-ratio:1; overflow:hidden; background:#111; border:1px solid var(--border); cursor:pointer; flex-shrink:0; }
+  .thumb img { width:100%; height:100%; object-fit:cover; opacity:.55; transition:opacity .2s; }
+  .thumb.active img, .thumb:hover img { opacity:1; }
+  .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:start; }
+  .spec-row { display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); font-size:13px; }
+  .spec-label { color:var(--muted); letter-spacing:1px; text-transform:uppercase; font-size:11px; }
+  .spec-val { color:var(--text); font-family:'Space Mono',monospace; font-size:12px; }
+  .video-wrap { position:relative; padding-bottom:56.25%; height:0; overflow:hidden; background:#0a0a0a; }
+  .video-wrap iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:none; }
+  @media(max-width:900px){ .detail-grid{grid-template-columns:1fr;gap:48px;} .gallery{grid-template-columns:1fr;} .gallery-thumbs{flex-direction:row;max-height:unset;overflow-x:auto;} .thumb{width:64px;flex-shrink:0;} }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="../index.html" class="nav-logo">Hor<span>log</span>erie</a>
+  <div class="nav-links">
+    <a href="../index.html#collection">Collection</a>
+    <a href="../index.html#about">About</a>
+    <a href="../admin/index.html"><button class="nav-admin-btn">Admin</button></a>
+  </div>
+</nav>
+
+<!-- Breadcrumb -->
+<div style="padding:90px 5% 0;max-width:1200px;margin:0 auto;">
+  <p style="font-size:11px;letter-spacing:2px;color:var(--muted);">
+    <a href="../index.html" style="color:var(--muted);">COLLECTION</a>
+    <span style="margin:0 10px;">›</span>
+    <span id="bc-name" style="color:var(--gold);">—</span>
+  </p>
+</div>
+
+<!-- MAIN CONTENT -->
+<main id="content" style="max-width:1200px;margin:0 auto;padding:40px 5% 100px;">
+
+  <div id="spinner" class="spinner" style="margin:100px auto;"></div>
+
+  <div id="watch-detail" style="display:none;">
+
+    <!-- Top: Gallery + Info -->
+    <div class="detail-grid" style="margin-bottom:80px;">
+
+      <!-- LEFT: Gallery -->
+      <div>
+        <div class="gallery">
+          <div class="gallery-main">
+            <img id="main-img" src="" alt="">
+          </div>
+          <div class="gallery-thumbs" id="thumbs"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Info -->
+      <div>
+        <p class="section-label" id="detail-brand"></p>
+        <h1 class="serif" style="font-size:clamp(32px,4vw,48px);font-weight:300;color:var(--white);margin-bottom:16px;" id="detail-name"></h1>
+        <div class="divider"></div>
+
+        <div style="margin:28px 0;">
+          <div style="font-family:'Space Mono',monospace;font-size:28px;color:var(--gold);" id="detail-price"></div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px;" id="detail-shipping"></div>
+        </div>
+
+        <div id="detail-desc" style="color:var(--muted);line-height:2;font-size:15px;margin-bottom:32px;"></div>
+
+        <!-- PayPal Buy Button -->
+        <div style="margin-bottom:20px;">
+          <button id="paypal-btn" onclick="buyNow()" class="btn-dark" style="width:100%;padding:16px;font-size:12px;letter-spacing:3px;display:flex;align-items:center;justify-content:center;gap:10px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7.02 21.898L7.77 17H4.5l2.22-13.898h6.03c2.49 0 4.17 1.14 4.53 3.12.18.99.12 1.92-.18 2.76C18.66 10.23 19.5 11.7 19.5 13.5c0 3.6-2.94 5.4-6.12 5.4H11.1l-.48 3h-3.6z"/></svg>
+            Pay with PayPal
+          </button>
+          <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px;letter-spacing:1px;">Secure checkout via PayPal</p>
+        </div>
+
+        <!-- Specs -->
+        <div style="border-top:1px solid var(--border);margin-top:32px;padding-top:8px;" id="specs-block">
+          <div class="spec-row">
+            <span class="spec-label">Shipping</span>
+            <span class="spec-val" id="spec-shipping">—</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-label">Payment</span>
+            <span class="spec-val">PayPal (Secure)</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-label">Condition</span>
+            <span class="spec-val">As described</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video (shown if exists) -->
+    <div id="video-section" style="display:none;margin-bottom:80px;">
+      <p class="section-label" style="margin-bottom:16px;">Watch in Motion</p>
+      <div class="video-wrap" id="video-wrap"></div>
+    </div>
+
+    <!-- Full Description -->
+    <div style="max-width:760px;margin-bottom:80px;">
+      <p class="section-label" style="margin-bottom:16px;">Details & Description</p>
+      <div id="full-desc" style="color:var(--muted);line-height:2.1;font-size:15px;white-space:pre-wrap;"></div>
+    </div>
+
+    <!-- Back to Collection -->
+    <div style="text-align:center;border-top:1px solid var(--border);padding-top:60px;">
+      <p style="font-size:11px;letter-spacing:3px;color:var(--muted);margin-bottom:24px;text-transform:uppercase;">Continue Browsing</p>
+      <a href="../index.html#collection" class="btn-gold">Back to Collection</a>
+    </div>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer id="footer">
+  <div class="footer-logo">Horlogerie</div>
+  <div class="footer-copy">© 2025 HORLOGERIE. All rights reserved.</div>
+  <div class="footer-links">
+    <a href="../index.html#collection">Collection</a>
+    <a href="../index.html#about">About</a>
+  </div>
+</footer>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs }
+                           from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT.firebaseapp.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// Get slug from filename: watches/rolex-submariner.html → rolex-submariner
+const slug = location.pathname.split('/').pop().replace('.html','');
+
+async function loadWatch() {
+  try {
+    const q    = query(collection(db,'watches'), where('slug','==',slug));
+    const snap = await getDocs(q);
+    if (snap.empty) { showError('Watch not found.'); return; }
+
+    const w = snap.docs[0].data();
+    document.getElementById('spinner').remove();
+    document.getElementById('watch-detail').style.display = 'block';
+
+    // SEO
+    document.title = `${w.name} — HORLOGERIE`;
+    setMeta('og:title',       `${w.name} — HORLOGERIE`);
+    setMeta('og:description', w.description?.slice(0,160) || '');
+    setMeta('og:image',       w.images?.[0] || '');
+    setMeta('og:url',         location.href);
+    setMeta('description',    w.description?.slice(0,160) || '');
+    // JSON-LD
+    const ld = document.createElement('script');
+    ld.type = 'application/ld+json';
+    ld.text = JSON.stringify({
+      "@context":"https://schema.org","@type":"Product",
+      "name": w.name, "image": w.images||[],
+      "description": w.description||'',
+      "offers":{"@type":"Offer","priceCurrency":"USD","price": w.price,
+                "availability":"https://schema.org/InStock"}
+    });
+    document.head.appendChild(ld);
+
+    // Breadcrumb + title
+    document.getElementById('bc-name').textContent  = w.name;
+    document.getElementById('detail-brand').textContent = (w.brand || 'Fine Watch').toUpperCase();
+    document.getElementById('detail-name').textContent  = w.name;
+    document.getElementById('detail-price').textContent = `USD ${Number(w.price).toLocaleString()}`;
+    const ship = w.shipping > 0 ? `+ Shipping: USD ${Number(w.shipping).toLocaleString()}` : 'Free Shipping';
+    document.getElementById('detail-shipping').textContent = ship;
+    document.getElementById('spec-shipping').textContent   = ship;
+    document.getElementById('detail-desc').textContent = w.description?.slice(0,220) + (w.description?.length>220?'…':'') || '';
+    document.getElementById('full-desc').textContent   = w.description || '';
+
+    // Gallery
+    const imgs = w.images || [];
+    const mainImg = document.getElementById('main-img');
+    if (imgs.length) {
+      mainImg.src = imgs[0]; mainImg.alt = w.name;
+      const thumbs = document.getElementById('thumbs');
+      imgs.forEach((src, i) => {
+        const d = document.createElement('div');
+        d.className = 'thumb' + (i===0?' active':'');
+        d.innerHTML = `<img src="${src}" alt="${w.name} ${i+1}">`;
+        d.onclick = () => {
+          mainImg.src = src;
+          document.querySelectorAll('.thumb').forEach(t=>t.classList.remove('active'));
+          d.classList.add('active');
+        };
+        thumbs.appendChild(d);
+      });
+    }
+
+    // Video (YouTube or direct URL)
+    if (w.video) {
+      const sec = document.getElementById('video-section');
+      sec.style.display = 'block';
+      const wrap = document.getElementById('video-wrap');
+      const ytMatch = w.video.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+      if (ytMatch) {
+        wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}" allowfullscreen loading="lazy"></iframe>`;
+      } else {
+        wrap.innerHTML = `<video controls src="${w.video}" style="width:100%;"></video>`;
+        wrap.style.paddingBottom = '0'; wrap.style.height = 'auto';
+      }
+    }
+
+    // Store watch data for PayPal
+    window._watch = w;
+
+  } catch(e) {
+    showError('Failed to load watch: ' + e.message);
+  }
+}
+
+function setMeta(name, content) {
+  let el = document.querySelector(`meta[name="${name}"],meta[property="${name}"]`);
+  if (!el) { el = document.createElement('meta'); el.setAttribute(name.startsWith('og')?'property':'name', name); document.head.appendChild(el); }
+  el.setAttribute('content', content);
+}
+
+function showError(msg) {
+  document.getElementById('spinner').remove();
+  document.getElementById('content').innerHTML = `<p style="color:#e05555;text-align:center;padding:100px 0;letter-spacing:2px;">${msg}</p>`;
+}
+
+loadWatch();
+</script>
+
+<script>
+// PayPal redirect checkout
+function buyNow() {
+  const w = window._watch;
+  if (!w) return;
+  const PAYPAL_EMAIL = "YOUR_PAYPAL_BUSINESS_EMAIL@example.com";
+  const total = (Number(w.price) + Number(w.shipping||0)).toFixed(2);
+  const params = new URLSearchParams({
+    cmd:           '_xclick',
+    business:      PAYPAL_EMAIL,
+    item_name:     w.name,
+    amount:        total,
+    currency_code: 'USD',
+    return:        location.href + '?thankyou=1',
+    cancel_return: location.href
+  });
+  window.open('https://www.paypal.com/cgi-bin/webscr?' + params.toString(), '_blank');
+}
+
+// Thank you message
+if (location.search.includes('thankyou=1')) {
+  setTimeout(() => {
+    const t = document.getElementById('toast');
+    t.textContent = '✓ Thank you for your order! We will contact you shortly.';
+    t.className = 'show';
+    setTimeout(()=>t.className='', 6000);
+  }, 800);
+}
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + type;
+  setTimeout(() => t.className = '', 3000);
+}
+</script>
+</body>
+</html>

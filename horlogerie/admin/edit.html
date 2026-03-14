@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Watch — HORLOGERIE Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .edit-wrap { max-width:860px; margin:0 auto; padding:100px 5% 100px; }
+  .form-group { margin-bottom:28px; }
+  .form-label { display:block; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:10px; }
+  .form-input, .form-textarea, .form-select {
+    width:100%; padding:14px 16px; background:var(--card);
+    border:1px solid var(--border); color:var(--text);
+    font-family:'Jost',sans-serif; font-size:14px;
+    transition:border-color .2s; outline:none;
+  }
+  .form-input:focus, .form-textarea:focus { border-color:var(--gold); }
+  .form-textarea { min-height:200px; resize:vertical; line-height:1.8; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  .img-preview-grid { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+  .img-thumb { width:90px; height:68px; object-fit:cover; border:1px solid var(--border); position:relative; }
+  .img-remove { position:absolute; top:2px; right:2px; width:18px; height:18px; background:rgba(0,0,0,0.75); color:#e05555; border:none; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; }
+  .upload-area { border:1px dashed var(--border); padding:32px; text-align:center; cursor:pointer; transition:border-color .2s; position:relative; }
+  .upload-area:hover { border-color:var(--gold); }
+  .upload-area input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+  .progress-bar { height:3px; background:var(--border); margin-top:10px; overflow:hidden; display:none; }
+  .progress-fill { height:100%; background:var(--gold); width:0; transition:width .2s; }
+  .slug-preview { font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); margin-top:6px; }
+  .rich-toolbar { display:flex; gap:4px; margin-bottom:4px; flex-wrap:wrap; }
+  .rich-btn { padding:5px 10px; background:transparent; border:1px solid var(--border); color:var(--muted); font-size:11px; cursor:pointer; transition:all .2s; }
+  .rich-btn:hover { border-color:var(--gold); color:var(--gold); }
+  #desc-editor { min-height:220px; background:var(--card); border:1px solid var(--border); color:var(--text); padding:14px 16px; outline:none; font-family:'Jost',sans-serif; font-size:14px; line-height:1.9; }
+  #desc-editor:focus { border-color:var(--gold); }
+  #desc-editor b { font-weight:600; }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a href="../index.html" class="nav-logo">Hor<span>log</span>erie</a>
+  <div class="nav-links">
+    <a href="index.html" style="font-size:11px;letter-spacing:2px;color:var(--muted);">← Back to Admin</a>
+    <button id="logout-btn" class="nav-admin-btn" onclick="logout()">Sign Out</button>
+  </div>
+</nav>
+
+<div id="auth-check" style="display:flex;align-items:center;justify-content:center;min-height:100vh;">
+  <div class="spinner"></div>
+</div>
+
+<div id="edit-wrap" class="edit-wrap" style="display:none;">
+
+  <div style="margin-bottom:48px;">
+    <p class="section-label" id="page-label">New Watch</p>
+    <h1 class="serif" style="font-size:40px;font-weight:300;color:var(--white);" id="page-title">Add a Timepiece</h1>
+    <div class="divider"></div>
+  </div>
+
+  <form id="watch-form" onsubmit="return false;">
+
+    <!-- Name -->
+    <div class="form-group">
+      <label class="form-label">Watch Name *</label>
+      <input class="form-input" id="f-name" type="text" placeholder="e.g. Rolex Submariner Date 116610LN" required oninput="updateSlug()">
+      <div class="slug-preview">URL: /watches/<span id="slug-preview">—</span>.html</div>
+    </div>
+
+    <!-- Brand + Price + Shipping -->
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Brand</label>
+        <input class="form-input" id="f-brand" type="text" placeholder="e.g. Rolex">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Price (USD) *</label>
+        <input class="form-input" id="f-price" type="number" min="0" step="0.01" placeholder="8500" required>
+      </div>
+    </div>
+
+    <div class="form-group" style="max-width:280px;">
+      <label class="form-label">Shipping Cost (USD)</label>
+      <input class="form-input" id="f-shipping" type="number" min="0" step="0.01" placeholder="0 for free shipping">
+    </div>
+
+    <!-- Description (rich text) -->
+    <div class="form-group">
+      <label class="form-label">Description *</label>
+      <div class="rich-toolbar">
+        <button class="rich-btn" onclick="fmt('bold')" title="Bold"><b>B</b></button>
+        <button class="rich-btn" onclick="fmt('italic')" title="Italic"><i>I</i></button>
+        <button class="rich-btn" onclick="fmt('insertUnorderedList')" title="Bullet list">• List</button>
+        <button class="rich-btn" onclick="fmt('insertOrderedList')" title="Numbered list">1. List</button>
+        <button class="rich-btn" onclick="fmt('underline')" title="Underline"><u>U</u></button>
+        <button class="rich-btn" onclick="insertHR()" title="Divider">— HR</button>
+      </div>
+      <div id="desc-editor" contenteditable="true" spellcheck="true" placeholder="Describe the watch — movement, condition, history, box & papers..."></div>
+    </div>
+
+    <!-- Images upload -->
+    <div class="form-group">
+      <label class="form-label">Images (up to 10)</label>
+      <div class="upload-area" id="img-upload-area">
+        <input type="file" id="img-input" accept="image/*" multiple onchange="handleImages(this.files)">
+        <p style="color:var(--muted);font-size:13px;letter-spacing:1px;">Click or drag to upload images</p>
+        <p style="color:var(--muted);font-size:11px;margin-top:4px;">JPG, PNG, WEBP — Max 5MB each</p>
+      </div>
+      <div class="progress-bar" id="img-progress"><div class="progress-fill" id="img-fill"></div></div>
+      <div class="img-preview-grid" id="img-previews"></div>
+      <input type="hidden" id="f-images" value="[]">
+    </div>
+
+    <!-- Video -->
+    <div class="form-group">
+      <label class="form-label">Video (optional)</label>
+      <input class="form-input" id="f-video-url" type="url" placeholder="YouTube URL — https://youtube.com/watch?v=..." style="margin-bottom:8px;">
+      <p style="font-size:11px;color:var(--muted);letter-spacing:1px;">— or upload a video file —</p>
+      <div class="upload-area" style="margin-top:8px;">
+        <input type="file" id="video-input" accept="video/*" onchange="handleVideo(this.files[0])">
+        <p style="color:var(--muted);font-size:13px;letter-spacing:1px;">Click to upload video file</p>
+        <p style="color:var(--muted);font-size:11px;margin-top:4px;">MP4, MOV, WEBM — Max 200MB</p>
+      </div>
+      <div class="progress-bar" id="vid-progress"><div class="progress-fill" id="vid-fill"></div></div>
+      <div id="video-status" style="font-size:12px;color:var(--gold);margin-top:8px;font-family:'Space Mono',monospace;"></div>
+    </div>
+
+    <!-- Submit -->
+    <div style="display:flex;gap:16px;margin-top:48px;border-top:1px solid var(--border);padding-top:32px;">
+      <button type="button" id="save-btn" onclick="saveWatch()" class="btn-dark" style="min-width:180px;padding:15px;">Save Watch</button>
+      <a href="index.html" class="btn-gold" style="padding:15px 32px;">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp }       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+                               from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, setDoc, addDoc, serverTimestamp }
+                               from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL }
+                               from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT.firebaseapp.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+const ADMIN_EMAIL = "YOUR_GOOGLE_ACCOUNT@gmail.com";
+
+const app      = initializeApp(firebaseConfig);
+const auth     = getAuth(app);
+const db       = getFirestore(app);
+const storage  = getStorage(app);
+const params   = new URLSearchParams(location.search);
+const editId   = params.get('id');
+let   imageUrls = [];
+let   videoUrl  = '';
+
+// ── Auth guard ──────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  document.getElementById('auth-check').style.display = 'none';
+  if (user && user.email === ADMIN_EMAIL) {
+    document.getElementById('edit-wrap').style.display = 'block';
+    if (editId) loadExisting();
+  } else {
+    location.href = 'index.html';
+  }
+});
+window.logout = () => { signOut(auth); location.href = 'index.html'; };
+
+// ── Load existing for edit ─────────────────────────────
+async function loadExisting() {
+  document.getElementById('page-label').textContent = 'Edit Watch';
+  document.getElementById('page-title').textContent = 'Edit Timepiece';
+  const snap = await getDoc(doc(db,'watches',editId));
+  if (!snap.exists()) { showToast('Watch not found','error'); return; }
+  const w = snap.data();
+  document.getElementById('f-name').value     = w.name || '';
+  document.getElementById('f-brand').value    = w.brand || '';
+  document.getElementById('f-price').value    = w.price || '';
+  document.getElementById('f-shipping').value = w.shipping || '';
+  document.getElementById('desc-editor').innerHTML = w.descriptionHtml || w.description || '';
+  document.getElementById('f-video-url').value = w.video && !w.video.includes('firebasestorage') ? w.video : '';
+  document.getElementById('slug-preview').textContent = w.slug || '';
+  // Images
+  imageUrls = w.images || [];
+  document.getElementById('f-images').value = JSON.stringify(imageUrls);
+  imageUrls.forEach(url => addPreview(url));
+  // Video from storage
+  if (w.video && w.video.includes('firebasestorage')) {
+    videoUrl = w.video;
+    document.getElementById('video-status').textContent = '✓ Video uploaded';
+  }
+}
+
+// ── Slug ───────────────────────────────────────────────
+window.updateSlug = () => {
+  const slug = document.getElementById('f-name').value
+    .toLowerCase().trim()
+    .replace(/[^a-z0-9\s-]/g,'')
+    .replace(/\s+/g,'-')
+    .replace(/-+/g,'-')
+    .slice(0,60);
+  document.getElementById('slug-preview').textContent = slug || '—';
+};
+
+// ── Image upload ───────────────────────────────────────
+window.handleImages = async (files) => {
+  if (imageUrls.length + files.length > 10) { showToast('Max 10 images','error'); return; }
+  const bar  = document.getElementById('img-progress');
+  const fill = document.getElementById('img-fill');
+  bar.style.display = 'block';
+  let done = 0;
+  for (const file of Array.from(files)) {
+    if (file.size > 5*1024*1024) { showToast(`${file.name} exceeds 5MB`,'error'); continue; }
+    const url = await uploadFile(file, `watches/${Date.now()}_${file.name}`, p => {
+      fill.style.width = Math.round(((done + p/100) / files.length)*100) + '%';
+    });
+    imageUrls.push(url);
+    addPreview(url);
+    done++;
+  }
+  document.getElementById('f-images').value = JSON.stringify(imageUrls);
+  bar.style.display = 'none'; fill.style.width = '0';
+};
+
+function addPreview(url) {
+  const grid = document.getElementById('img-previews');
+  const wrap = document.createElement('div');
+  wrap.style.position = 'relative';
+  wrap.innerHTML = `<img class="img-thumb" src="${url}"><button class="img-remove" title="Remove">✕</button>`;
+  wrap.querySelector('button').onclick = () => {
+    imageUrls = imageUrls.filter(u => u !== url);
+    document.getElementById('f-images').value = JSON.stringify(imageUrls);
+    wrap.remove();
+  };
+  grid.appendChild(wrap);
+}
+
+// ── Video upload ───────────────────────────────────────
+window.handleVideo = async (file) => {
+  if (!file) return;
+  if (file.size > 200*1024*1024) { showToast('Video max 200MB','error'); return; }
+  const bar    = document.getElementById('vid-progress');
+  const fill   = document.getElementById('vid-fill');
+  const status = document.getElementById('video-status');
+  bar.style.display = 'block';
+  status.textContent = 'Uploading…';
+  videoUrl = await uploadFile(file, `videos/${Date.now()}_${file.name}`, p => {
+    fill.style.width = p + '%';
+  });
+  bar.style.display = 'none';
+  status.textContent = '✓ Video uploaded';
+  document.getElementById('f-video-url').value = '';
+};
+
+function uploadFile(file, path, onProgress) {
+  return new Promise((resolve, reject) => {
+    const r    = ref(storage, path);
+    const task = uploadBytesResumable(r, file);
+    task.on('state_changed',
+      snap => onProgress(Math.round(snap.bytesTransferred/snap.totalBytes*100)),
+      reject,
+      async () => resolve(await getDownloadURL(task.snapshot.ref))
+    );
+  });
+}
+
+// ── Save ───────────────────────────────────────────────
+window.saveWatch = async () => {
+  const name     = document.getElementById('f-name').value.trim();
+  const price    = parseFloat(document.getElementById('f-price').value);
+  const descHtml = document.getElementById('desc-editor').innerHTML.trim();
+  const descText = document.getElementById('desc-editor').innerText.trim();
+
+  if (!name)        { showToast('Watch name is required','error'); return; }
+  if (isNaN(price)) { showToast('Price is required','error'); return; }
+  if (!descText)    { showToast('Description is required','error'); return; }
+  if (!imageUrls.length) { showToast('At least one image is required','error'); return; }
+
+  const slug     = name.toLowerCase().trim().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').slice(0,60);
+  const finalVid = videoUrl || document.getElementById('f-video-url').value.trim() || '';
+
+  const data = {
+    name, slug,
+    brand:         document.getElementById('f-brand').value.trim(),
+    price,
+    shipping:      parseFloat(document.getElementById('f-shipping').value) || 0,
+    description:   descText,
+    descriptionHtml: descHtml,
+    images:        imageUrls,
+    video:         finalVid,
+    updatedAt:     serverTimestamp(),
+  };
+
+  const btn = document.getElementById('save-btn');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+
+  try {
+    if (editId) {
+      await setDoc(doc(db,'watches',editId), data, { merge:true });
+    } else {
+      data.createdAt = serverTimestamp();
+      await addDoc(collection(db,'watches'), data);
+    }
+    showToast('✓ Watch saved!');
+    setTimeout(() => location.href = 'index.html', 1200);
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+    btn.textContent = 'Save Watch'; btn.disabled = false;
+  }
+};
+</script>
+
+<script>
+// Rich text
+function fmt(cmd) { document.execCommand(cmd, false, null); document.getElementById('desc-editor').focus(); }
+function insertHR() {
+  const hr = document.createElement('hr');
+  hr.style.cssText = 'border:none;border-top:1px solid rgba(201,169,110,0.2);margin:16px 0;';
+  const sel = window.getSelection();
+  if (sel.rangeCount) { const r = sel.getRangeAt(0); r.insertNode(hr); }
+}
+// Placeholder behaviour
+document.getElementById('desc-editor').addEventListener('focus', function(){
+  if(this.textContent === '') this.innerHTML = '';
+});
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + type;
+  setTimeout(() => t.className = '', 3000);
+}
+</script>
+</body>
+</html>
