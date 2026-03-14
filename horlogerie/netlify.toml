@@ -1,5 +1,5 @@
 [[redirects]]
-  from = "/watches/*"
+  from = "/watches/:slug"
   to   = "/watches/watch-template.html"
   status = 200
 
