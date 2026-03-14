@@ -1,3 +1,9 @@
+[build]
+  publish = "."
+
+[build.environment]
+  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
+
 [[redirects]]
   from = "/watches/:slug"
   to   = "/watches/watch-template.html"
