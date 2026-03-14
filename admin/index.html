@@ -19,6 +19,19 @@
   .btn-sm:hover { border-color:var(--gold); color:var(--gold); }
   .btn-sm.danger:hover { border-color:#e05555; color:#e05555; }
   #login-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; text-align:center; gap:24px; }
+  .tab-bar { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:40px; }
+  .tab-btn { padding:12px 28px; font-size:11px; letter-spacing:2px; text-transform:uppercase; background:none; border:none; border-bottom:2px solid transparent; color:var(--muted); cursor:pointer; transition:all .2s; margin-bottom:-1px; }
+  .tab-btn.active { color:var(--gold); border-bottom-color:var(--gold); }
+  .order-row { padding:20px 0; border-bottom:1px solid var(--border); }
+  .order-header { display:grid; grid-template-columns:1fr auto; gap:20px; align-items:center; cursor:pointer; }
+  .order-title { font-family:'Cormorant Garamond',serif; font-size:18px; color:var(--white); }
+  .order-meta { font-size:11px; color:var(--muted); letter-spacing:1px; margin-top:4px; }
+  .status-badge { display:inline-block; padding:4px 10px; font-size:10px; letter-spacing:1px; text-transform:uppercase; border:1px solid; }
+  .status-pending { border-color:#c9a84c; color:#c9a84c; }
+  .status-paid { border-color:#4caf50; color:#4caf50; }
+  .order-detail { display:none; margin-top:14px; padding:20px; background:#0d0d0d; border:1px solid var(--border); font-size:12px; color:var(--muted); line-height:2.4; }
+  .order-detail.open { display:block; }
+  .order-detail b { color:var(--white); font-weight:400; }
 </style>
 </head>
 <body>
@@ -48,14 +61,30 @@
   <div class="admin-header">
     <div>
       <p class="section-label">Dashboard</p>
-      <h1 class="serif" style="font-size:36px;font-weight:300;color:var(--white);">Watch Manager</h1>
+      <h1 class="serif" style="font-size:36px;font-weight:300;color:var(--white);">HORLOGERIE Admin</h1>
     </div>
     <a href="edit.html" class="btn-gold" style="white-space:nowrap;">+ Add Watch</a>
   </div>
 
-  <div id="watches-spinner" class="spinner"></div>
-  <div id="watches-list"></div>
-  <p id="no-watches" style="color:var(--muted);text-align:center;padding:60px;letter-spacing:2px;display:none;">NO WATCHES YET — ADD YOUR FIRST ONE</p>
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('watches')">Watches</button>
+    <button class="tab-btn" onclick="switchTab('orders')" id="orders-tab-btn">Orders <span id="orders-count" style="font-size:10px;margin-left:4px;"></span></button>
+  </div>
+
+  <!-- Watches Tab -->
+  <div id="tab-watches">
+    <div id="watches-spinner" class="spinner"></div>
+    <div id="watches-list"></div>
+    <p id="no-watches" style="color:var(--muted);text-align:center;padding:60px;letter-spacing:2px;display:none;">NO WATCHES YET — ADD YOUR FIRST ONE</p>
+  </div>
+
+  <!-- Orders Tab -->
+  <div id="tab-orders" style="display:none;">
+    <div id="orders-spinner" class="spinner"></div>
+    <div id="orders-list"></div>
+    <p id="no-orders" style="color:var(--muted);text-align:center;padding:60px;letter-spacing:2px;display:none;">NO ORDERS YET</p>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -64,7 +93,7 @@
 import { initializeApp }       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
                                from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, deleteDoc, doc, orderBy, query }
+import { getFirestore, collection, getDocs, deleteDoc, doc, orderBy, query, updateDoc }
                                from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -149,6 +178,80 @@ window.deleteWatch = async (id, btn) => {
   await deleteDoc(doc(db,'watches',id));
   btn.closest('.watch-row').remove();
   showToast('Watch deleted.');
+};
+
+// ── Tab switching ──────────────────────────────────────
+window.switchTab = function(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-watches').style.display = tab==='watches' ? 'block' : 'none';
+  document.getElementById('tab-orders').style.display  = tab==='orders'  ? 'block' : 'none';
+  event.target.classList.add('active');
+  if (tab === 'orders' && !window._ordersLoaded) loadOrders();
+};
+
+// ── Load orders ────────────────────────────────────────
+async function loadOrders() {
+  window._ordersLoaded = true;
+  const list    = document.getElementById('orders-list');
+  const spinner = document.getElementById('orders-spinner');
+  try {
+    const q    = query(collection(db,'orders'), orderBy('createdAt','desc'));
+    const snap = await getDocs(q);
+    spinner.remove();
+    if (snap.empty) { document.getElementById('no-orders').style.display='block'; return; }
+    document.getElementById('orders-count').textContent = `(${snap.size})`;
+    snap.forEach(d => {
+      const o = d.data();
+      const b = o.buyer || {};
+      const a = b.address || {};
+      const date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'}) : '—';
+      const statusClass = o.status === 'paid' ? 'status-paid' : 'status-pending';
+      const statusLabel = o.status === 'paid' ? 'Paid' : 'Pending Payment';
+      const row = document.createElement('div');
+      row.className = 'order-row';
+      row.innerHTML = `
+        <div class="order-header" onclick="this.nextElementSibling.classList.toggle('open')">
+          <div>
+            <div class="order-title">${o.watchName || '—'}</div>
+            <div class="order-meta">${date} &nbsp;·&nbsp; ${b.name||'—'} &nbsp;·&nbsp; ${b.email||'—'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;">
+            <div style="font-family:'Space Mono',monospace;font-size:14px;color:var(--gold);">USD ${Number(o.total||0).toLocaleString()}</div>
+            <span class="status-badge ${statusClass}">${statusLabel}</span>
+            ${o.status !== 'paid' ? `<button class="btn-sm" onclick="event.stopPropagation();markPaid('${d.id}',this)">Mark Paid</button>` : ''}
+          </div>
+        </div>
+        <div class="order-detail">
+          <b>Watch:</b> ${o.watchName||'—'}<br>
+          <b>Price:</b> USD ${Number(o.watchPrice||0).toLocaleString()} &nbsp;+&nbsp; Shipping USD ${Number(o.watchShipping||0).toLocaleString()}<br>
+          <b>Total:</b> USD ${Number(o.total||0).toLocaleString()}<br>
+          <br>
+          <b>Buyer:</b> ${b.name||'—'}<br>
+          <b>Email:</b> ${b.email||'—'}<br>
+          <b>Phone:</b> ${b.phone||'—'}<br>
+          <b>Address:</b> ${[a.line1,a.line2,a.city,a.state,a.zip,a.country].filter(Boolean).join(', ')}<br>
+          ${b.notes ? `<b>Notes:</b> ${b.notes}<br>` : ''}
+          <br>
+          <b>Order Date:</b> ${date}<br>
+          <b>Status:</b> ${statusLabel}
+        </div>`;
+      list.appendChild(row);
+    });
+  } catch(e) {
+    if (spinner.parentNode) spinner.remove();
+    list.innerHTML = `<p style="color:#e05555;">Error loading orders: ${e.message}</p>`;
+  }
+}
+
+window.markPaid = async (id, btn) => {
+  btn.textContent = '...'; btn.disabled = true;
+  await updateDoc(doc(db,'orders',id), { status:'paid' });
+  showToast('Marked as paid.');
+  window._ordersLoaded = false;
+  document.getElementById('orders-list').innerHTML = '';
+  const sp = document.createElement('div'); sp.id='orders-spinner'; sp.className='spinner';
+  document.getElementById('tab-orders').prepend(sp);
+  loadOrders();
 };
 </script>
 
