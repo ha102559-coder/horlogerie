@@ -154,8 +154,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
-// Get slug from filename: watches/rolex-submariner.html → rolex-submariner
-const slug = location.pathname.split('/').pop().replace('.html','');
+// Get slug from URL param ?slug=xxx OR from filename
+const urlParams = new URLSearchParams(location.search);
+const slug = urlParams.get('slug') || location.pathname.split('/').pop().replace('.html','');
 
 async function loadWatch() {
   try {
