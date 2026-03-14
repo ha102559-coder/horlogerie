@@ -144,12 +144,12 @@ import { getFirestore, collection, query, where, getDocs }
                            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID"
+  apiKey: "AIzaSyB7SY3k0835AyM1fLDtOs0thPrg3cmxifk",
+  authDomain: "gold-bed6c.firebaseapp.com",
+  projectId: "gold-bed6c",
+  storageBucket: "gold-bed6c.firebasestorage.app",
+  messagingSenderId: "498200351921",
+  appId: "1:498200351921:web:66e590427b3457a43afe90"
 };
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
@@ -257,7 +257,7 @@ loadWatch();
 function buyNow() {
   const w = window._watch;
   if (!w) return;
-  const PAYPAL_EMAIL = "YOUR_PAYPAL_BUSINESS_EMAIL@example.com";
+  const PAYPAL_EMAIL = "enzdwllg@gmail.com";
   const total = (Number(w.price) + Number(w.shipping||0)).toFixed(2);
   const params = new URLSearchParams({
     cmd:           '_xclick',
