@@ -1,0 +1,14 @@
+[[redirects]]
+  from = "/watches/:slug"
+  to   = "/watches/watch-template.html"
+  status = 200
+
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

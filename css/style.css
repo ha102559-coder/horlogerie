@@ -1,0 +1,201 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&family=Space+Mono&display=swap');
+
+/* ── Reset & Base ─────────────────────────────────────── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --black:   #0a0a0a;
+  --dark:    #111111;
+  --card:    #181818;
+  --border:  rgba(255,255,255,0.08);
+  --gold:    #c9a96e;
+  --gold2:   #e8d5b0;
+  --text:    #e8e4de;
+  --muted:   #7a7570;
+  --white:   #f5f2ee;
+}
+html { scroll-behavior: smooth; }
+body {
+  background: var(--black);
+  color: var(--text);
+  font-family: 'Jost', sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.75;
+  overflow-x: hidden;
+}
+img { max-width: 100%; display: block; }
+a  { color: inherit; text-decoration: none; }
+button { cursor: pointer; font-family: inherit; }
+
+/* ── Typography ───────────────────────────────────────── */
+.serif        { font-family: 'Cormorant Garamond', serif; }
+.mono         { font-family: 'Space Mono', monospace; }
+h1,h2,h3,h4  { font-family: 'Cormorant Garamond', serif; font-weight: 400; line-height: 1.15; }
+
+/* ── Navigation ───────────────────────────────────────── */
+#nav {
+  position: fixed; top:0; left:0; right:0; z-index:100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 5%; height: 68px;
+  background: rgba(10,10,10,0.92);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  transition: background .3s;
+}
+.nav-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; letter-spacing: 6px;
+  color: var(--gold); text-transform: uppercase;
+}
+.nav-logo span { font-style: italic; }
+.nav-links { display: flex; gap: 36px; align-items: center; }
+.nav-links a {
+  font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--muted); transition: color .2s;
+}
+.nav-links a:hover { color: var(--gold); }
+.nav-admin-btn {
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  padding: 8px 18px; border: 1px solid var(--border);
+  background: transparent; color: var(--muted);
+  transition: all .2s;
+}
+.nav-admin-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ── Buttons ──────────────────────────────────────────── */
+.btn-gold {
+  display: inline-block; padding: 14px 40px;
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+  transition: all .25s;
+}
+.btn-gold:hover { background: var(--gold); color: var(--black); }
+.btn-dark {
+  display: inline-block; padding: 14px 40px;
+  background: var(--gold);
+  color: var(--black);
+  font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+  border: 1px solid var(--gold);
+  transition: all .25s;
+}
+.btn-dark:hover { background: transparent; color: var(--gold); }
+
+/* ── Section helpers ──────────────────────────────────── */
+.section-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 10px;
+}
+.section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 300; color: var(--white);
+}
+.divider {
+  width: 40px; height: 1px;
+  background: var(--gold); margin: 20px 0;
+}
+
+/* ── Watch Card ───────────────────────────────────────── */
+.watch-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  position: relative; overflow: hidden;
+  transition: border-color .3s, transform .3s;
+  cursor: pointer;
+}
+.watch-card:hover {
+  border-color: rgba(201,169,110,0.35);
+  transform: translateY(-4px);
+}
+.watch-card-img {
+  aspect-ratio: 4/3; overflow: hidden; background: #0f0f0f;
+}
+.watch-card-img img {
+  width:100%; height:100%; object-fit:cover;
+  transition: transform .6s ease;
+}
+.watch-card:hover .watch-card-img img { transform: scale(1.05); }
+.watch-card-body { padding: 22px 22px 24px; }
+.watch-card-brand {
+  font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 6px;
+}
+.watch-card-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; color: var(--white); margin-bottom: 8px;
+}
+.watch-card-price {
+  font-family: 'Space Mono', monospace;
+  font-size: 14px; color: var(--gold2);
+}
+.watch-card-shipping {
+  font-size: 11px; color: var(--muted); margin-top: 4px;
+}
+.watch-card-btn {
+  margin-top: 18px; width:100%;
+  padding: 11px; background: transparent;
+  border: 1px solid var(--border); color: var(--muted);
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  transition: all .2s;
+}
+.watch-card:hover .watch-card-btn {
+  border-color: var(--gold); color: var(--gold);
+}
+
+/* ── Footer ───────────────────────────────────────────── */
+#footer {
+  background: #070707;
+  border-top: 1px solid var(--border);
+  padding: 50px 5%;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 20px;
+}
+.footer-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px; letter-spacing: 5px; color: var(--gold);
+}
+.footer-copy {
+  font-size: 11px; color: var(--muted); letter-spacing: 1px;
+}
+.footer-links { display: flex; gap: 24px; }
+.footer-links a {
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted); transition: color .2s;
+}
+.footer-links a:hover { color: var(--gold); }
+
+/* ── Notification Toast ───────────────────────────────── */
+#toast {
+  position: fixed; bottom: 30px; right: 30px; z-index: 9999;
+  padding: 14px 24px; background: var(--card);
+  border-left: 3px solid var(--gold);
+  color: var(--text); font-size: 13px;
+  transform: translateX(120%); transition: transform .3s ease;
+  max-width: 300px;
+}
+#toast.show { transform: translateX(0); }
+#toast.error { border-left-color: #e05555; }
+
+/* ── Loading spinner ──────────────────────────────────── */
+.spinner {
+  width: 32px; height: 32px;
+  border: 1px solid var(--border);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  margin: 60px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Scroll reveal ────────────────────────────────────── */
+.reveal { opacity:0; transform:translateY(24px); transition: opacity .7s ease, transform .7s ease; }
+.reveal.visible { opacity:1; transform:translateY(0); }
+
+/* ── Responsive ───────────────────────────────────────── */
+@media(max-width:768px){
+  .nav-links { display:none; }
+  #nav { padding: 0 20px; }
+}
