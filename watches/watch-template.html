@@ -9,6 +9,9 @@
 <style>
   .gallery { display:grid; grid-template-columns:1fr 80px; gap:12px; }
   .gallery-main { aspect-ratio:4/3; overflow:hidden; background:#0f0f0f; cursor:zoom-in; }
+  #lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;}
+  #lightbox.open{display:flex;}
+  #lightbox img{max-width:92vw;max-height:92vh;object-fit:contain;transition:transform .3s;}
   .gallery-main img { width:100%; height:100%; object-fit:cover; transition:transform .4s; }
   .gallery-main img:hover { transform:scale(1.04); }
   .gallery-thumbs { display:flex; flex-direction:column; gap:8px; overflow-y:auto; max-height:400px; }
@@ -85,7 +88,7 @@
       <!-- LEFT: Gallery -->
       <div>
         <div class="gallery">
-          <div class="gallery-main">
+          <div class="gallery-main" onclick="openLightbox()">
             <img id="main-img" src="" alt="">
           </div>
           <div class="gallery-thumbs" id="thumbs"></div>
@@ -423,6 +426,33 @@ function showToast(msg, type='') {
   t.textContent = msg; t.className = 'show ' + type;
   setTimeout(() => t.className = '', 3000);
 }
+</script>
+
+<div id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="" style="max-width:200vw;max-height:200vh;">
+</div>
+<script>
+function openLightbox(){
+  const src = document.getElementById('main-img').src;
+  const img = document.getElementById('lightbox-img');
+  const mainImg = document.getElementById('main-img');
+  img.src = src;
+  // Calculate 2x of the displayed image size
+  const rect = mainImg.getBoundingClientRect();
+  const w = Math.min(rect.width * 2, window.innerWidth * 0.95);
+  const h = Math.min(rect.height * 2, window.innerHeight * 0.95);
+  img.style.maxWidth = w + 'px';
+  img.style.maxHeight = h + 'px';
+  img.style.width = 'auto';
+  img.style.height = 'auto';
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
 </script>
 </body>
 </html>
