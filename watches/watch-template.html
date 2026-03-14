@@ -22,6 +22,33 @@
   .video-wrap { position:relative; padding-bottom:56.25%; height:0; overflow:hidden; background:#0a0a0a; max-width:600px; margin:0 auto; }
   .video-wrap iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:none; }
   @media(max-width:900px){ .detail-grid{grid-template-columns:1fr;gap:48px;} .gallery{grid-template-columns:1fr;} .gallery-thumbs{flex-direction:row;max-height:unset;overflow-x:auto;} .thumb{width:64px;flex-shrink:0;} }
+
+  /* ── Checkout Modal ── */
+  #checkout-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);z-index:9000;align-items:center;justify-content:center;padding:20px;}
+  #checkout-overlay.open{display:flex;}
+  #checkout-modal{background:#111;border:1px solid var(--border,#2a2a2a);max-width:520px;width:100%;padding:40px;position:relative;animation:modalIn .25s ease;max-height:90vh;overflow-y:auto;}
+  @keyframes modalIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  #checkout-modal .modal-close{position:absolute;top:16px;right:20px;background:none;border:none;color:var(--muted,#666);font-size:22px;cursor:pointer;line-height:1;}
+  #checkout-modal .modal-close:hover{color:#fff;}
+  #checkout-modal h2{font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--gold,#c9a84c);margin-bottom:6px;font-weight:400;}
+  .modal-subtitle{font-size:12px;color:var(--muted,#666);margin-bottom:28px;letter-spacing:1px;}
+  .modal-order-summary{background:#0d0d0d;border:1px solid var(--border,#2a2a2a);padding:16px 20px;margin-bottom:28px;display:flex;justify-content:space-between;align-items:center;}
+  .modal-order-summary .order-name{font-size:13px;color:#fff;letter-spacing:1px;}
+  .modal-order-summary .order-total{font-family:'Space Mono',monospace;font-size:15px;color:var(--gold,#c9a84c);}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .form-row.full{grid-template-columns:1fr;}
+  .field-group{display:flex;flex-direction:column;gap:6px;}
+  .field-group label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted,#666);}
+  .field-group input,.field-group textarea{background:#0d0d0d;border:1px solid var(--border,#2a2a2a);color:#fff;padding:12px 14px;font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;width:100%;box-sizing:border-box;}
+  .field-group input:focus,.field-group textarea:focus{border-color:var(--gold,#c9a84c);}
+  .field-group input.error{border-color:#e05555;}
+  .field-group textarea{resize:vertical;min-height:72px;}
+  .modal-divider{border:none;border-top:1px solid var(--border,#2a2a2a);margin:24px 0 20px;}
+  .modal-section-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted,#666);margin-bottom:16px;}
+  #proceed-btn{width:100%;padding:16px;margin-top:24px;font-size:11px;letter-spacing:3px;text-transform:uppercase;background:var(--gold,#c9a84c);color:#000;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600;transition:opacity .2s;}
+  #proceed-btn:hover{opacity:.85;}
+  #proceed-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .modal-note{font-size:11px;color:var(--muted,#666);text-align:center;margin-top:12px;letter-spacing:1px;line-height:1.8;}
 </style>
 </head>
 <body>
@@ -80,7 +107,7 @@
 
         <!-- PayPal Buy Button -->
         <div style="margin-bottom:20px;">
-          <button id="paypal-btn" onclick="buyNow()" class="btn-dark" style="width:100%;padding:16px;font-size:12px;letter-spacing:3px;display:flex;align-items:center;justify-content:center;gap:10px;">
+          <button id="paypal-btn" onclick="openCheckout()" class="btn-dark" style="width:100%;padding:16px;font-size:12px;letter-spacing:3px;display:flex;align-items:center;justify-content:center;gap:10px;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7.02 21.898L7.77 17H4.5l2.22-13.898h6.03c2.49 0 4.17 1.14 4.53 3.12.18.99.12 1.92-.18 2.76C18.66 10.23 19.5 11.7 19.5 13.5c0 3.6-2.94 5.4-6.12 5.4H11.1l-.48 3h-3.6z"/></svg>
             Pay with PayPal
           </button>
@@ -136,11 +163,57 @@
   </div>
 </footer>
 
+<div id="checkout-overlay" onclick="overlayClose(event)">
+  <div id="checkout-modal">
+    <button class="modal-close" onclick="closeCheckout()">✕</button>
+    <h2>Shipping Information</h2>
+    <p class="modal-subtitle">Please fill in your details before proceeding to payment</p>
+    <div class="modal-order-summary">
+      <span class="order-name" id="modal-watch-name">—</span>
+      <span class="order-total" id="modal-total">USD —</span>
+    </div>
+    <p class="modal-section-label">Contact</p>
+    <div class="form-row">
+      <div class="field-group"><label>Full Name *</label><input type="text" id="f-name" placeholder="John Smith"></div>
+      <div class="field-group"><label>Email *</label><input type="email" id="f-email" placeholder="john@email.com"></div>
+    </div>
+    <div class="form-row full" style="margin-bottom:0;">
+      <div class="field-group"><label>Phone / WhatsApp</label><input type="tel" id="f-phone" placeholder="+1 555 000 0000"></div>
+    </div>
+    <hr class="modal-divider">
+    <p class="modal-section-label">Shipping Address</p>
+    <div class="form-row full">
+      <div class="field-group"><label>Address Line 1 *</label><input type="text" id="f-addr1" placeholder="123 Main Street"></div>
+    </div>
+    <div class="form-row full">
+      <div class="field-group"><label>Address Line 2</label><input type="text" id="f-addr2" placeholder="Apt, Suite, Floor (optional)"></div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>City *</label><input type="text" id="f-city" placeholder="New York"></div>
+      <div class="field-group"><label>State / Province</label><input type="text" id="f-state" placeholder="NY"></div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>Postal Code *</label><input type="text" id="f-zip" placeholder="10001"></div>
+      <div class="field-group"><label>Country *</label><input type="text" id="f-country" placeholder="United States"></div>
+    </div>
+    <hr class="modal-divider">
+    <p class="modal-section-label">Order Notes <span style="font-size:10px;color:var(--muted)">(optional)</span></p>
+    <div class="form-row full" style="margin-bottom:0;">
+      <div class="field-group"><textarea id="f-notes" placeholder="Special delivery instructions, questions, etc."></textarea></div>
+    </div>
+    <button id="proceed-btn" onclick="proceedToPayPal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7.02 21.898L7.77 17H4.5l2.22-13.898h6.03c2.49 0 4.17 1.14 4.53 3.12.18.99.12 1.92-.18 2.76C18.66 10.23 19.5 11.7 19.5 13.5c0 3.6-2.94 5.4-6.12 5.4H11.1l-.48 3h-3.6z"/></svg>
+      Continue to PayPal
+    </button>
+    <p class="modal-note">Your information is saved securely.<br>You will be redirected to PayPal to complete payment.</p>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script type="module">
 import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, query, where, getDocs }
+import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp }
                            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -251,26 +324,89 @@ function showError(msg) {
 }
 
 loadWatch();
-</script>
+
+window._saveOrderAndPay = async function(buyer, watch) {
+  const btn = document.getElementById('proceed-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  try {
+    const total = (Number(watch.price) + Number(watch.shipping||0)).toFixed(2);
+    await addDoc(collection(db, 'orders'), {
+      watchSlug:     watch.slug || '',
+      watchName:     watch.name,
+      watchPrice:    watch.price,
+      watchShipping: watch.shipping || 0,
+      total:         parseFloat(total),
+      currency:      'USD',
+      status:        'pending_payment',
+      createdAt:     serverTimestamp(),
+      buyer: {
+        name:  buyer.name,
+        email: buyer.email,
+        phone: buyer.phone,
+        address: { line1:buyer.addr1, line2:buyer.addr2, city:buyer.city, state:buyer.state, zip:buyer.zip, country:buyer.country },
+        notes: buyer.notes,
+      }
+    });
+    const PAYPAL_EMAIL = "enzdwllg@gmail.com";
+    const params = new URLSearchParams({
+      cmd:'_xclick', business:PAYPAL_EMAIL, item_name:watch.name, amount:total,
+      currency_code:'USD', custom:buyer.email,
+      return:location.href.split('?')[0]+'?thankyou=1',
+      cancel_return:location.href.split('?')[0]
+    });
+    window.open('https://www.paypal.com/cgi-bin/webscr?'+params.toString(),'_blank');
+    closeCheckout();
+  } catch(err) {
+    btn.disabled = false;
+    btn.textContent = 'Continue to PayPal';
+    alert('Failed to save order: ' + err.message);
+  }
+};</script>
 
 <script>
-// PayPal redirect checkout
-function buyNow() {
+// Checkout modal
+function openCheckout() {
   const w = window._watch;
   if (!w) return;
-  const PAYPAL_EMAIL = "enzdwllg@gmail.com";
-  const total = (Number(w.price) + Number(w.shipping||0)).toFixed(2);
-  const params = new URLSearchParams({
-    cmd:           '_xclick',
-    business:      PAYPAL_EMAIL,
-    item_name:     w.name,
-    amount:        total,
-    currency_code: 'USD',
-    return:        location.href + '?thankyou=1',
-    cancel_return: location.href
-  });
-  window.open('https://www.paypal.com/cgi-bin/webscr?' + params.toString(), '_blank');
+  const total = (Number(w.price)+Number(w.shipping||0)).toLocaleString('en-US',{minimumFractionDigits:2});
+  document.getElementById('modal-watch-name').textContent = w.name;
+  document.getElementById('modal-total').textContent = `USD ${total}`;
+  document.getElementById('checkout-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
+function closeCheckout() {
+  document.getElementById('checkout-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function overlayClose(e) {
+  if (e.target === document.getElementById('checkout-overlay')) closeCheckout();
+}
+function proceedToPayPal() {
+  const required = {'f-name':'Full Name','f-email':'Email','f-addr1':'Address','f-city':'City','f-zip':'Postal Code','f-country':'Country'};
+  let valid = true;
+  Object.keys(required).forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('error');
+    if (!el.value.trim()) { el.classList.add('error'); valid = false; }
+  });
+  const email = document.getElementById('f-email');
+  if (email.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) { email.classList.add('error'); valid = false; }
+  if (!valid) { showToast('Please fill in all required fields.'); return; }
+  window._saveOrderAndPay({
+    name:    document.getElementById('f-name').value.trim(),
+    email:   document.getElementById('f-email').value.trim(),
+    phone:   document.getElementById('f-phone').value.trim(),
+    addr1:   document.getElementById('f-addr1').value.trim(),
+    addr2:   document.getElementById('f-addr2').value.trim(),
+    city:    document.getElementById('f-city').value.trim(),
+    state:   document.getElementById('f-state').value.trim(),
+    zip:     document.getElementById('f-zip').value.trim(),
+    country: document.getElementById('f-country').value.trim(),
+    notes:   document.getElementById('f-notes').value.trim(),
+  }, window._watch);
+}
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeCheckout(); });
 
 // Thank you message
 if (location.search.includes('thankyou=1')) {
