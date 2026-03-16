@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog Manager — HORLOGERIE Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  body { background:#0a0a0a; }
+  .wrap { max-width:960px; margin:0 auto; padding:100px 5% 80px; }
+  .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:48px; border-bottom:1px solid var(--border); padding-bottom:24px; }
+  /* Form */
+  .form-group { margin-bottom:24px; }
+  .form-label { display:block; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+  .form-input, .form-select {
+    width:100%; padding:13px 16px; background:var(--card);
+    border:1px solid var(--border); color:var(--text);
+    font-family:'Jost',sans-serif; font-size:14px; outline:none; transition:border-color .2s;
+  }
+  .form-input:focus, .form-select:focus { border-color:var(--gold); }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  /* Rich editor */
+  #content-editor {
+    min-height:320px; background:var(--card); border:1px solid var(--border);
+    color:var(--text); padding:14px 16px; outline:none;
+    font-family:'Jost',sans-serif; font-size:14px; line-height:1.9;
+  }
+  #content-editor:focus { border-color:var(--gold); }
+  .rich-toolbar { display:flex; gap:4px; margin-bottom:4px; flex-wrap:wrap; }
+  .rich-btn {
+    padding:5px 10px; background:transparent; border:1px solid var(--border);
+    color:var(--muted); font-size:11px; cursor:pointer; transition:all .2s;
+  }
+  .rich-btn:hover { border-color:var(--gold); color:var(--gold); }
+  /* Post list */
+  .post-row {
+    display:grid; grid-template-columns:1fr auto auto; gap:16px;
+    align-items:center; padding:16px 0; border-bottom:1px solid var(--border);
+  }
+  .post-title-cell { font-family:'Cormorant Garamond',serif; font-size:18px; color:var(--white); }
+  .post-meta-cell { font-family:'Space Mono',monospace; font-size:10px; color:var(--muted); margin-top:4px; }
+  .btn-sm {
+    padding:7px 14px; font-size:10px; letter-spacing:2px; text-transform:uppercase;
+    border:1px solid var(--border); background:transparent; color:var(--muted); transition:all .2s; white-space:nowrap;
+  }
+  .btn-sm:hover { border-color:var(--gold); color:var(--gold); }
+  .btn-sm.danger:hover { border-color:#e05555; color:#e05555; }
+  /* Tabs */
+  .tabs { display:flex; gap:0; margin-bottom:36px; border-bottom:1px solid var(--border); }
+  .tab {
+    padding:12px 28px; font-size:11px; letter-spacing:2px; text-transform:uppercase;
+    color:var(--muted); cursor:pointer; border-bottom:2px solid transparent;
+    transition:all .2s; background:none; border-top:none; border-left:none; border-right:none;
+  }
+  .tab.active { color:var(--gold); border-bottom-color:var(--gold); }
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
+  .slug-hint { font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); margin-top:6px; }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a href="../index.html" class="nav-logo">Hor<span>log</span>erie</a>
+  <div class="nav-links">
+    <a href="index.html" style="font-size:11px;letter-spacing:2px;color:var(--muted);">← Watch Manager</a>
+    <button class="nav-admin-btn" onclick="window._logout && window._logout()">Sign Out</button>
+  </div>
+</nav>
+
+<div id="auth-check" style="display:flex;align-items:center;justify-content:center;min-height:100vh;">
+  <div class="spinner"></div>
+</div>
+
+<div id="main-wrap" class="wrap" style="display:none;">
+  <div class="page-header">
+    <div>
+      <p class="section-label">Admin</p>
+      <h1 class="serif" style="font-size:34px;font-weight:300;color:var(--white);">Blog Manager</h1>
+    </div>
+    <a href="../blog.html" target="_blank" class="btn-gold" style="padding:10px 24px;font-size:10px;">View Blog ↗</a>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('list')">All Articles</button>
+    <button class="tab" id="tab-write" onclick="switchTab('write')">+ New Article</button>
+  </div>
+
+  <!-- LIST -->
+  <div class="tab-panel active" id="panel-list">
+    <div id="posts-spinner" class="spinner"></div>
+    <div id="posts-list"></div>
+    <p id="no-posts" style="color:var(--muted);text-align:center;padding:60px;letter-spacing:2px;display:none;">NO ARTICLES YET</p>
+  </div>
+
+  <!-- WRITE / EDIT -->
+  <div class="tab-panel" id="panel-write">
+    <input type="hidden" id="edit-id">
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Title *</label>
+        <input class="form-input" id="f-title" type="text" placeholder="e.g. How to Read a Watch Movement" oninput="updateSlug()">
+        <div class="slug-hint">URL slug: <span id="slug-preview">—</span></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tag / Category</label>
+        <input class="form-input" id="f-tag" type="text" placeholder="e.g. Guide, Review, History">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Read Time (minutes)</label>
+        <input class="form-input" id="f-readtime" type="number" min="1" placeholder="5">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cover Image URL (optional)</label>
+        <input class="form-input" id="f-cover" type="url" placeholder="https://...">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Excerpt (shown on listing page) *</label>
+      <input class="form-input" id="f-excerpt" type="text" placeholder="A short description of this article...">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Article Content *</label>
+      <div class="rich-toolbar">
+        <button type="button" class="rich-btn" onclick="fmt('bold')"><b>B</b></button>
+        <button type="button" class="rich-btn" onclick="fmt('italic')"><i>I</i></button>
+        <button type="button" class="rich-btn" onclick="fmt('underline')"><u>U</u></button>
+        <button type="button" class="rich-btn" onclick="fmtBlock('h2')">H2</button>
+        <button type="button" class="rich-btn" onclick="fmtBlock('h3')">H3</button>
+        <button type="button" class="rich-btn" onclick="fmt('insertUnorderedList')">• List</button>
+        <button type="button" class="rich-btn" onclick="fmt('insertOrderedList')">1. List</button>
+        <button type="button" class="rich-btn" onclick="fmtBlock('blockquote')">❝ Quote</button>
+        <button type="button" class="rich-btn" onclick="insertHR()">— HR</button>
+      </div>
+      <div id="content-editor" contenteditable="true" spellcheck="true"
+        placeholder="Write your article here..."></div>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:32px;padding-top:28px;border-top:1px solid var(--border);">
+      <button type="button" id="save-btn" onclick="savePost()" class="btn-dark" style="min-width:160px;padding:14px;">Publish Article</button>
+      <button type="button" onclick="cancelEdit()" class="btn-gold" style="padding:14px 28px;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + type;
+  setTimeout(() => t.className = '', 3000);
+}
+function fmt(cmd) { document.execCommand(cmd, false, null); document.getElementById('content-editor').focus(); }
+function fmtBlock(tag) { document.execCommand('formatBlock', false, tag); document.getElementById('content-editor').focus(); }
+function insertHR() {
+  const hr = document.createElement('hr');
+  hr.style.cssText = 'border:none;border-top:1px solid rgba(201,169,110,0.2);margin:24px 0;';
+  const sel = window.getSelection();
+  if (sel.rangeCount) { sel.getRangeAt(0).insertNode(hr); }
+}
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['list','write'][i] === name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+}
+function updateSlug() {
+  const slug = document.getElementById('f-title').value
+    .toLowerCase().trim()
+    .replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').slice(0,60);
+  document.getElementById('slug-preview').textContent = slug || '—';
+}
+function cancelEdit() {
+  document.getElementById('edit-id').value = '';
+  document.getElementById('f-title').value = '';
+  document.getElementById('f-tag').value = '';
+  document.getElementById('f-readtime').value = '';
+  document.getElementById('f-cover').value = '';
+  document.getElementById('f-excerpt').value = '';
+  document.getElementById('content-editor').innerHTML = '';
+  document.getElementById('slug-preview').textContent = '—';
+  document.getElementById('save-btn').textContent = 'Publish Article';
+  document.getElementById('tab-write').textContent = '+ New Article';
+  switchTab('list');
+}
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, query, orderBy, getDocs,
+         doc, addDoc, setDoc, deleteDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB7SY3k0835AyM1fLDtOs0thPrg3cmxifk",
+  authDomain: "gold-bed6c.firebaseapp.com",
+  projectId: "gold-bed6c",
+  storageBucket: "gold-bed6c.firebasestorage.app",
+  messagingSenderId: "498200351921",
+  appId: "1:498200351921:web:66e590427b3457a43afe90"
+};
+const ADMIN_EMAIL = "enzdwllg@gmail.com";
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+onAuthStateChanged(auth, user => {
+  document.getElementById('auth-check').style.display = 'none';
+  if (user && user.email === ADMIN_EMAIL) {
+    document.getElementById('main-wrap').style.display = 'block';
+    loadPosts();
+  } else {
+    location.href = 'index.html';
+  }
+});
+window._logout = () => { signOut(auth); location.href = 'index.html'; };
+
+// ── Load posts ──────────────────────────────────────────
+async function loadPosts() {
+  const list    = document.getElementById('posts-list');
+  const spinner = document.getElementById('posts-spinner');
+  try {
+    const q    = query(collection(db,'blog_posts'), orderBy('createdAt','desc'));
+    const snap = await getDocs(q);
+    spinner.remove();
+    if (snap.empty) { document.getElementById('no-posts').style.display='block'; return; }
+    snap.forEach(d => {
+      const p    = d.data();
+      const date = p.createdAt?.toDate
+        ? p.createdAt.toDate().toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'})
+        : '—';
+      const row  = document.createElement('div');
+      row.className = 'post-row';
+      row.id = 'row-'+d.id;
+      row.innerHTML = `
+        <div>
+          <div class="post-title-cell">${p.title}</div>
+          <div class="post-meta-cell">${date} · ${p.tag||'No tag'} · ${p.readTime||'?'} min read</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-sm" onclick="editPost('${d.id}')">Edit</button>
+          <a href="../blog-post.html?slug=${p.slug}" target="_blank" class="btn-sm">View ↗</a>
+        </div>
+        <button class="btn-sm danger" onclick="deletePost('${d.id}','${p.title.replace(/'/g,"\\'")}',this)">Delete</button>`;
+      list.appendChild(row);
+    });
+  } catch(e) {
+    if(spinner.parentNode) spinner.remove();
+    list.innerHTML = `<p style="color:#e05555;">Error: ${e.message}</p>`;
+  }
+}
+
+// ── Save / update post ──────────────────────────────────
+window.savePost = async () => {
+  const btn     = document.getElementById('save-btn');
+  const editId  = document.getElementById('edit-id').value;
+  const title   = document.getElementById('f-title').value.trim();
+  const excerpt = document.getElementById('f-excerpt').value.trim();
+  const html    = document.getElementById('content-editor').innerHTML.trim();
+  const text    = document.getElementById('content-editor').innerText.trim();
+
+  if (!title)   { showToast('Title is required','error'); return; }
+  if (!excerpt) { showToast('Excerpt is required','error'); return; }
+  if (!text)    { showToast('Content is required','error'); return; }
+
+  const slug = title.toLowerCase().trim()
+    .replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').slice(0,60);
+
+  const data = {
+    title, slug, excerpt,
+    tag:         document.getElementById('f-tag').value.trim(),
+    readTime:    parseInt(document.getElementById('f-readtime').value) || null,
+    coverImage:  document.getElementById('f-cover').value.trim(),
+    contentHtml: html,
+    content:     text,
+    updatedAt:   serverTimestamp(),
+  };
+
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  try {
+    if (editId) {
+      await setDoc(doc(db,'blog_posts',editId), data, {merge:true});
+      showToast('✓ Article updated!');
+    } else {
+      data.createdAt = serverTimestamp();
+      await addDoc(collection(db,'blog_posts'), data);
+      showToast('✓ Article published!');
+    }
+    cancelEdit();
+    document.getElementById('posts-list').innerHTML = '';
+    document.getElementById('no-posts').style.display = 'none';
+    const spinnerEl = document.createElement('div');
+    spinnerEl.id = 'posts-spinner'; spinnerEl.className = 'spinner';
+    document.getElementById('posts-list').before(spinnerEl);
+    loadPosts();
+  } catch(e) {
+    showToast('Error: '+e.message,'error');
+    btn.textContent = editId ? 'Save Changes' : 'Publish Article';
+    btn.disabled = false;
+  }
+};
+
+// ── Edit post ────────────────────────────────────────────
+window.editPost = async (id) => {
+  const q    = query(collection(db,'blog_posts'));
+  const snap = await getDocs(q);
+  const d    = snap.docs.find(x => x.id === id);
+  if (!d) { showToast('Post not found','error'); return; }
+  const p = d.data();
+  document.getElementById('edit-id').value          = id;
+  document.getElementById('f-title').value          = p.title || '';
+  document.getElementById('f-tag').value            = p.tag || '';
+  document.getElementById('f-readtime').value       = p.readTime || '';
+  document.getElementById('f-cover').value          = p.coverImage || '';
+  document.getElementById('f-excerpt').value        = p.excerpt || '';
+  document.getElementById('content-editor').innerHTML = p.contentHtml || p.content || '';
+  document.getElementById('slug-preview').textContent = p.slug || '';
+  document.getElementById('save-btn').textContent   = 'Save Changes';
+  document.getElementById('tab-write').textContent  = 'Editing…';
+  switchTab('write');
+};
+
+// ── Delete post ──────────────────────────────────────────
+window.deletePost = async (id, title, btn) => {
+  if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
+  btn.textContent = '…'; btn.disabled = true;
+  await deleteDoc(doc(db,'blog_posts',id));
+  document.getElementById('row-'+id)?.remove();
+  showToast('Article deleted.');
+};
+</script>
+</body>
+</html>
