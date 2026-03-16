@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About Us — HORLOGERIE</title>
+<meta name="description" content="About Guangzhou Augustus Watch Co., Ltd. — Professional watch manufacturer.">
+<link rel="canonical" href="https://horlogerie.netlify.app/about.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9a96e;
+    --gold-light: #e2c48a;
+    --white: #f5f0e8;
+    --muted: #888;
+    --bg: #0a0a0a;
+    --dark: #111;
+    --border: rgba(201,169,110,0.15);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 5%;
+    background: rgba(10,10,10,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight: 400; letter-spacing: 4px;
+    color: var(--white); text-decoration: none; text-transform: uppercase;
+  }
+  .nav-logo span { color: var(--gold); }
+  .nav-links { display: flex; align-items: center; gap: 32px; }
+  .nav-links a {
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); text-decoration: none; transition: color .3s;
+  }
+  .nav-links a:hover, .nav-links a.active { color: var(--gold); }
+  .nav-admin-btn {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--muted); padding: 8px 18px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; transition: all .3s;
+  }
+  .nav-admin-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* HERO BANNER */
+  .about-hero {
+    min-height: 55vh;
+    display: flex; align-items: flex-end;
+    padding: 140px 5% 80px;
+    position: relative; overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  .about-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 70% at 30% 50%, rgba(201,169,110,0.07) 0%, transparent 70%);
+  }
+  .hero-line-v {
+    position: absolute; top: 0; left: 5%; width: 1px; height: 100%;
+    background: linear-gradient(180deg, transparent, rgba(201,169,110,0.2), transparent);
+  }
+  .hero-line-v2 {
+    position: absolute; top: 0; right: 5%; width: 1px; height: 100%;
+    background: linear-gradient(180deg, transparent, rgba(201,169,110,0.1), transparent);
+  }
+  .about-hero-content { position: relative; z-index: 1; max-width: 1200px; width: 100%; }
+  .section-label {
+    font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 16px; display: block;
+  }
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(48px, 7vw, 88px);
+    font-weight: 300; line-height: 1.05;
+    color: var(--white); letter-spacing: 2px;
+  }
+  .hero-title em { color: var(--gold); font-style: italic; }
+  .divider {
+    width: 48px; height: 1px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+    margin: 24px 0;
+  }
+
+  /* INTRO SECTION */
+  .intro-section {
+    padding: 100px 5%;
+    max-width: 1200px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr 1.6fr; gap: 80px; align-items: start;
+  }
+  .intro-left { position: sticky; top: 120px; }
+  .intro-label {
+    font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 20px; display: block;
+  }
+  .intro-heading {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(32px, 4vw, 52px); font-weight: 300;
+    line-height: 1.2; margin-bottom: 24px;
+  }
+  .intro-heading em { color: var(--gold); font-style: italic; }
+  .intro-body { color: var(--muted); font-size: 13px; line-height: 2.2; }
+  .intro-right p {
+    color: #aaa; font-size: 14px; line-height: 2.2;
+    margin-bottom: 28px; padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .intro-right p:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .highlight { color: var(--gold-light); font-weight: 500; }
+
+  /* STATS BAND */
+  .stats-band {
+    background: var(--dark);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 0 5%;
+  }
+  .stats-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+  }
+  .stat-item {
+    padding: 56px 20px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+    transition: background .3s;
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-item:hover { background: rgba(201,169,110,0.04); }
+  .stat-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px; font-weight: 300; color: var(--gold);
+    line-height: 1; margin-bottom: 10px;
+  }
+  .stat-label {
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted);
+  }
+
+  /* INFO CARDS */
+  .info-section {
+    padding: 100px 5%;
+    max-width: 1200px; margin: 0 auto;
+  }
+  .info-section-header { margin-bottom: 56px; }
+  .info-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border);
+  }
+  .info-card {
+    background: var(--bg);
+    padding: 40px 32px;
+    transition: background .3s;
+    position: relative; overflow: hidden;
+  }
+  .info-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    transform: scaleX(0); transition: transform .4s;
+  }
+  .info-card:hover { background: rgba(201,169,110,0.03); }
+  .info-card:hover::before { transform: scaleX(1); }
+  .info-icon {
+    font-size: 28px; margin-bottom: 20px; display: block;
+  }
+  .info-card-label {
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 12px; display: block;
+  }
+  .info-card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight: 400; color: var(--white);
+    margin-bottom: 12px;
+  }
+  .info-card-text { font-size: 12px; color: var(--muted); line-height: 2; }
+
+  /* LOCATION SECTION */
+  .location-section {
+    padding: 80px 5% 100px;
+    background: var(--dark);
+    border-top: 1px solid var(--border);
+  }
+  .location-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: grid; grid-template-columns: 1.2fr 1fr; gap: 80px; align-items: center;
+  }
+  .address-block {
+    border: 1px solid var(--border); padding: 48px;
+    position: relative;
+  }
+  .address-block::after {
+    content: '';
+    position: absolute; bottom: -1px; left: 48px; right: 48px; height: 1px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+  }
+  .address-row {
+    display: flex; gap: 20px; align-items: flex-start;
+    padding: 18px 0; border-bottom: 1px solid var(--border);
+  }
+  .address-row:last-child { border-bottom: none; }
+  .address-key {
+    font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--gold); min-width: 90px; padding-top: 2px;
+  }
+  .address-val { font-size: 13px; color: #bbb; line-height: 1.7; }
+
+  /* FOOTER */
+  footer {
+    text-align: center; padding: 48px 5%;
+    border-top: 1px solid var(--border);
+  }
+  .footer-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px; letter-spacing: 6px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 16px;
+  }
+  .footer-copy {
+    font-size: 10px; letter-spacing: 2px; color: var(--muted);
+    text-transform: uppercase; margin-bottom: 20px;
+  }
+  .footer-links { display: flex; justify-content: center; gap: 32px; }
+  .footer-links a {
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); text-decoration: none; transition: color .3s;
+  }
+  .footer-links a:hover { color: var(--gold); }
+
+  /* REVEAL ANIMATION */
+  .reveal { opacity: 0; transform: translateY(32px); transition: opacity .8s ease, transform .8s ease; }
+  .reveal.visible { opacity: 1; transform: none; }
+  .reveal-delay-1 { transition-delay: .1s; }
+  .reveal-delay-2 { transition-delay: .2s; }
+  .reveal-delay-3 { transition-delay: .3s; }
+  .reveal-delay-4 { transition-delay: .4s; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .intro-section { grid-template-columns: 1fr; gap: 40px; }
+    .intro-left { position: static; }
+    .stats-inner { grid-template-columns: repeat(2, 1fr); }
+    .stat-item:nth-child(2) { border-right: none; }
+    .info-grid { grid-template-columns: 1fr; }
+    .location-inner { grid-template-columns: 1fr; gap: 40px; }
+  }
+  @media (max-width: 600px) {
+    .stats-inner { grid-template-columns: 1fr 1fr; }
+    .nav-links a:not(.nav-admin-btn + a) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">Hor<span>log</span>erie</a>
+  <div class="nav-links">
+    <a href="index.html#collection">Collection</a>
+    <a href="about.html" class="active">About</a>
+    <a href="admin/index.html"><button class="nav-admin-btn">Admin</button></a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="about-hero">
+  <div class="hero-line-v"></div>
+  <div class="hero-line-v2"></div>
+  <div class="about-hero-content">
+    <span class="section-label">Guangzhou Augustus Watch Co., Ltd.</span>
+    <h1 class="hero-title">
+      Crafting Time<br>Since <em>2025</em>
+    </h1>
+    <div class="divider"></div>
+    <p style="color:var(--muted);font-size:13px;max-width:520px;letter-spacing:.5px;">
+      A professional manufacturer of quartz and mechanical timepieces — built on integrity, precision, and a complete quality management system.
+    </p>
+  </div>
+</section>
+
+<!-- INTRO -->
+<section style="padding:100px 5%;">
+  <div class="intro-section" style="padding:0;max-width:1200px;margin:0 auto;">
+    <div class="intro-left reveal">
+      <span class="intro-label">Who We Are</span>
+      <h2 class="intro-heading">A Legacy of<br><em>Watchmaking</em></h2>
+      <div class="divider"></div>
+      <p class="intro-body">
+        Rooted in Guangzhou's renowned watch trade district, we bring together factory expertise and global distribution into one trusted name.
+      </p>
+    </div>
+    <div class="intro-right">
+      <p class="reveal reveal-delay-1">
+        <span class="highlight">Guangzhou Augustus Watch Co., Ltd.</span> is a professional manufacturer and processor of quartz watches, mechanical watches, and related timepiece products. We operate with a complete and scientific quality management system that governs every stage of production.
+      </p>
+      <p class="reveal reveal-delay-2">
+        Our credibility, operational strength, and product quality have earned recognition across the industry. We warmly welcome friends and partners from all sectors to visit, inspect our facilities, and explore business opportunities with us.
+      </p>
+      <p class="reveal reveal-delay-3">
+        Operating as a <span class="highlight">direct factory</span>, we maintain full control over manufacturing quality — from movement selection to final finishing — ensuring every timepiece meets our exacting standards before it reaches your hands.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-band">
+  <div class="stats-inner">
+    <div class="stat-item reveal">
+      <div class="stat-number">5,000</div>
+      <div class="stat-label">m² Factory Floor</div>
+    </div>
+    <div class="stat-item reveal reveal-delay-1">
+      <div class="stat-number">100%</div>
+      <div class="stat-label">Authentic Pieces</div>
+    </div>
+    <div class="stat-item reveal reveal-delay-2">
+      <div class="stat-number">🌍</div>
+      <div class="stat-label">Worldwide Shipping</div>
+    </div>
+    <div class="stat-item reveal reveal-delay-3">
+      <div class="stat-number">✓</div>
+      <div class="stat-label">Quality Certified</div>
+    </div>
+  </div>
+</div>
+
+<!-- INFO CARDS -->
+<section class="info-section">
+  <div class="info-section-header reveal">
+    <span class="section-label">Our Capabilities</span>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,44px);font-weight:300;">
+      What We Offer
+    </h2>
+    <div class="divider"></div>
+  </div>
+  <div class="info-grid">
+    <div class="info-card reveal">
+      <span class="info-icon">⚙️</span>
+      <span class="info-card-label">Production</span>
+      <div class="info-card-title">Mechanical & Quartz</div>
+      <p class="info-card-text">Specialized production of both mechanical and quartz movements, with precision assembly and rigorous quality control at every stage.</p>
+    </div>
+    <div class="info-card reveal reveal-delay-1">
+      <span class="info-icon">🏭</span>
+      <span class="info-card-label">Operations</span>
+      <div class="info-card-title">Factory Direct</div>
+      <p class="info-card-text">As a factory-direct operation with 5,000 m² of production space, we eliminate intermediaries and pass the savings on to our partners.</p>
+    </div>
+    <div class="info-card reveal reveal-delay-2">
+      <span class="info-icon">🛡️</span>
+      <span class="info-card-label">Quality</span>
+      <div class="info-card-title">Certified Standards</div>
+      <p class="info-card-text">A complete and scientific quality management system ensures consistency, reliability, and authenticity across our entire product range.</p>
+    </div>
+    <div class="info-card reveal reveal-delay-3">
+      <span class="info-icon">📦</span>
+      <span class="info-card-label">Logistics</span>
+      <div class="info-card-title">Global Warehouse</div>
+      <p class="info-card-text">Our warehouse in Guangzhou's Yuexiu District — the heart of China's watch trade — enables fast, reliable worldwide dispatch.</p>
+    </div>
+    <div class="info-card reveal reveal-delay-1">
+      <span class="info-icon">🤝</span>
+      <span class="info-card-label">Partnership</span>
+      <div class="info-card-title">Open to Collaboration</div>
+      <p class="info-card-text">We welcome visits, facility tours, and business discussions from retailers, distributors, and watch enthusiasts worldwide.</p>
+    </div>
+    <div class="info-card reveal reveal-delay-2">
+      <span class="info-icon">💳</span>
+      <span class="info-card-label">Payment</span>
+      <div class="info-card-title">Secure Transactions</div>
+      <p class="info-card-text">All transactions are processed securely via PayPal, providing buyer protection and peace of mind for international orders.</p>
+    </div>
+  </div>
+</section>
+
+<!-- LOCATION -->
+<section class="location-section">
+  <div class="location-inner">
+    <div class="reveal">
+      <span class="section-label">Find Us</span>
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,44px);font-weight:300;margin-bottom:12px;">
+        Our <em style="color:var(--gold);">Location</em>
+      </h2>
+      <div class="divider"></div>
+      <p style="color:var(--muted);font-size:13px;line-height:2;margin-bottom:40px;">
+        Situated in Yuexiu District's Zhanxi Watch City — China's premier wholesale watch market — we are at the epicentre of Guangzhou's world-renowned timepiece trade.
+      </p>
+      <div class="address-block">
+        <div class="address-row">
+          <span class="address-key">Company</span>
+          <span class="address-val">Guangzhou Augustus Watch Co., Ltd.<br><span style="color:var(--muted);font-size:11px;">广州市奥古拉斯表业有限公司</span></span>
+        </div>
+        <div class="address-row">
+          <span class="address-key">Address</span>
+          <span class="address-val">Zhanxi Watch City, Yuexiu District<br>Guangzhou, Guangdong, China</span>
+        </div>
+        <div class="address-row">
+          <span class="address-key">Factory</span>
+          <span class="address-val">5,000 m² Production Facility</span>
+        </div>
+        <div class="address-row">
+          <span class="address-key">Mode</span>
+          <span class="address-val">Factory Direct / Manufacturer</span>
+        </div>
+        <div class="address-row">
+          <span class="address-key">Products</span>
+          <span class="address-val">Quartz Watches · Mechanical Watches</span>
+        </div>
+      </div>
+    </div>
+    <div class="reveal reveal-delay-2" style="display:flex;flex-direction:column;gap:16px;">
+      <div style="border:1px solid var(--border);padding:32px;text-align:center;">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:56px;color:var(--gold);margin-bottom:8px;">广州</div>
+        <div style="font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;">Guangzhou · China</div>
+      </div>
+      <div style="border:1px solid var(--border);padding:24px 32px;">
+        <p style="font-size:11px;letter-spacing:1px;color:var(--muted);line-height:2.2;text-align:center;">
+          We warmly welcome industry friends, retailers, and<br>
+          collectors to visit our facilities for inspection<br>
+          and business discussions.
+        </p>
+      </div>
+      <a href="index.html#collection" style="display:block;text-align:center;padding:18px;background:transparent;border:1px solid var(--gold);color:var(--gold);text-decoration:none;font-size:10px;letter-spacing:3px;text-transform:uppercase;transition:all .3s;"
+         onmouseover="this.style.background='rgba(201,169,110,0.08)'"
+         onmouseout="this.style.background='transparent'">
+        View Our Collection →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Horlogerie</div>
+  <div class="footer-copy">© 2025 HORLOGERIE. All rights reserved.</div>
+  <div class="footer-links">
+    <a href="index.html#collection">Collection</a>
+    <a href="about.html">About</a>
+    <a href="admin/index.html">Admin</a>
+  </div>
+</footer>
+
+<script>
+  // Scroll reveal
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Nav scroll style
+  window.addEventListener('scroll', () => {
+    document.querySelector('nav').style.background =
+      window.scrollY > 50 ? 'rgba(10,10,10,0.98)' : 'rgba(10,10,10,0.92)';
+  });
+</script>
+</body>
+</html>
