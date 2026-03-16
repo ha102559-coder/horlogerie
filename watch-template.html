@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- SEO meta tags injected by JS below -->
+<title>Loading... — HORLOGERIE</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .gallery { display:grid; grid-template-columns:1fr 80px; gap:12px; }
+  .gallery-main { aspect-ratio:4/3; overflow:hidden; background:#0f0f0f; cursor:zoom-in; }
+  #lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;}
+  #lightbox.open{display:flex;}
+  #lightbox img{max-width:92vw;max-height:92vh;object-fit:contain;transition:transform .3s;}
+  .gallery-main img { width:100%; height:100%; object-fit:cover; transition:transform .4s; }
+  .gallery-main img:hover { transform:scale(1.04); }
+  .gallery-thumbs { display:flex; flex-direction:column; gap:8px; overflow-y:auto; max-height:400px; }
+  .thumb { aspect-ratio:1; overflow:hidden; background:#111; border:1px solid var(--border); cursor:pointer; flex-shrink:0; }
+  .thumb img { width:100%; height:100%; object-fit:cover; opacity:.55; transition:opacity .2s; }
+  .thumb.active img, .thumb:hover img { opacity:1; }
+  .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:start; }
+  .spec-row { display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); font-size:13px; }
+  .spec-label { color:var(--muted); letter-spacing:1px; text-transform:uppercase; font-size:11px; }
+  .spec-val { color:var(--text); font-family:'Space Mono',monospace; font-size:12px; }
+  .video-wrap { position:relative; padding-bottom:56.25%; height:0; overflow:hidden; background:#0a0a0a; max-width:600px; margin:0 auto; }
+  .video-wrap iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:none; }
+  /* ── Tracking banner ── */
+  #tracking-banner { display:none; margin:0 0 40px; padding:20px 24px; border:1px solid var(--border); background:#0d0d0d; }
+  .tracking-status-label { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+  .tracking-status-value { font-family:'Cormorant Garamond',serif; font-size:22px; color:var(--gold); margin-bottom:12px; }
+  .tracking-info-row { font-size:12px; color:var(--muted); line-height:2.2; }
+  .tracking-info-row a { color:var(--gold); }
+  @media(max-width:900px){ .detail-grid{grid-template-columns:1fr;gap:48px;} .gallery{grid-template-columns:1fr;} .gallery-thumbs{flex-direction:row;max-height:unset;overflow-x:auto;} .thumb{width:64px;flex-shrink:0;} }
+
+  /* ── Checkout Modal ── */
+  #checkout-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);z-index:9000;align-items:center;justify-content:center;padding:20px;}
+  #checkout-overlay.open{display:flex;}
+  #checkout-modal{background:#111;border:1px solid var(--border,#2a2a2a);max-width:520px;width:100%;padding:40px;position:relative;animation:modalIn .25s ease;max-height:90vh;overflow-y:auto;}
+  @keyframes modalIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  #checkout-modal .modal-close{position:absolute;top:16px;right:20px;background:none;border:none;color:var(--muted,#666);font-size:22px;cursor:pointer;line-height:1;}
+  #checkout-modal .modal-close:hover{color:#fff;}
+  #checkout-modal h2{font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--gold,#c9a84c);margin-bottom:6px;font-weight:400;}
+  .modal-subtitle{font-size:12px;color:var(--muted,#666);margin-bottom:28px;letter-spacing:1px;}
+  .modal-order-summary{background:#0d0d0d;border:1px solid var(--border,#2a2a2a);padding:16px 20px;margin-bottom:28px;display:flex;justify-content:space-between;align-items:center;}
+  .modal-order-summary .order-name{font-size:13px;color:#fff;letter-spacing:1px;}
+  .modal-order-summary .order-total{font-family:'Space Mono',monospace;font-size:15px;color:var(--gold,#c9a84c);}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .form-row.full{grid-template-columns:1fr;}
+  .field-group{display:flex;flex-direction:column;gap:6px;}
+  .field-group label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted,#666);}
+  .field-group input,.field-group textarea{background:#0d0d0d;border:1px solid var(--border,#2a2a2a);color:#fff;padding:12px 14px;font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;width:100%;box-sizing:border-box;}
+  .field-group input:focus,.field-group textarea:focus{border-color:var(--gold,#c9a84c);}
+  .field-group input.error{border-color:#e05555;}
+  .field-group textarea{resize:vertical;min-height:72px;}
+  .modal-divider{border:none;border-top:1px solid var(--border,#2a2a2a);margin:24px 0 20px;}
+  .modal-section-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted,#666);margin-bottom:16px;}
+  #proceed-btn{width:100%;padding:16px;margin-top:24px;font-size:11px;letter-spacing:3px;text-transform:uppercase;background:var(--gold,#c9a84c);color:#000;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600;transition:opacity .2s;}
+  #proceed-btn:hover{opacity:.85;}
+  #proceed-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .modal-note{font-size:11px;color:var(--muted,#666);text-align:center;margin-top:12px;letter-spacing:1px;line-height:1.8;}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="../index.html" class="nav-logo">Hor<span>log</span>erie</a>
+  <div class="nav-links">
+    <a href="../index.html#collection">Collection</a>
+    <a href="../index.html#about">About</a>
+    <a href="../admin/index.html"><button class="nav-admin-btn">Admin</button></a>
+  </div>
+</nav>
+
+<!-- Breadcrumb -->
+<div style="padding:90px 5% 0;max-width:1200px;margin:0 auto;">
+  <p style="font-size:11px;letter-spacing:2px;color:var(--muted);">
+    <a href="../index.html" style="color:var(--muted);">COLLECTION</a>
+    <span style="margin:0 10px;">›</span>
+    <span id="bc-name" style="color:var(--gold);">—</span>
+  </p>
+</div>
+
+<!-- MAIN CONTENT -->
+<main id="content" style="max-width:1200px;margin:0 auto;padding:40px 5% 100px;">
+
+  <div id="spinner" class="spinner" style="margin:100px auto;"></div>
+
+  <!-- Tracking Banner (shown after order placed) -->
+  <div id="tracking-banner">
+    <div class="tracking-status-label">Order Status</div>
+    <div class="tracking-status-value" id="tracking-status-text">—</div>
+    <div class="tracking-info-row" id="tracking-info-row"></div>
+  </div>
+
+  <div id="watch-detail" style="display:none;">
+
+    <!-- Top: Gallery + Info -->
+    <div class="detail-grid" style="margin-bottom:80px;">
+
+      <!-- LEFT: Gallery -->
+      <div>
+        <div class="gallery">
+          <div class="gallery-main" onclick="openLightbox()">
+            <img id="main-img" src="" alt="">
+          </div>
+          <div class="gallery-thumbs" id="thumbs"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Info -->
+      <div>
+        <p class="section-label" id="detail-brand"></p>
+        <h1 class="serif" style="font-size:clamp(32px,4vw,48px);font-weight:300;color:var(--white);margin-bottom:16px;" id="detail-name"></h1>
+        <div class="divider"></div>
+
+        <div style="margin:28px 0;">
+          <div style="font-family:'Space Mono',monospace;font-size:28px;color:var(--gold);" id="detail-price"></div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px;" id="detail-shipping"></div>
+        </div>
+
+        <div id="detail-desc" style="color:var(--muted);line-height:2;font-size:15px;margin-bottom:32px;"></div>
+
+        <!-- PayPal Buy Button -->
+        <div style="margin-bottom:20px;">
+          <button id="paypal-btn" onclick="openCheckout()" class="btn-dark" style="width:100%;padding:16px;font-size:12px;letter-spacing:3px;display:flex;align-items:center;justify-content:center;gap:10px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7.02 21.898L7.77 17H4.5l2.22-13.898h6.03c2.49 0 4.17 1.14 4.53 3.12.18.99.12 1.92-.18 2.76C18.66 10.23 19.5 11.7 19.5 13.5c0 3.6-2.94 5.4-6.12 5.4H11.1l-.48 3h-3.6z"/></svg>
+            Pay with PayPal
+          </button>
+          <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px;letter-spacing:1px;">Secure checkout via PayPal</p>
+        </div>
+
+        <!-- Specs -->
+        <div style="border-top:1px solid var(--border);margin-top:32px;padding-top:8px;" id="specs-block">
+          <div class="spec-row">
+            <span class="spec-label">Shipping</span>
+            <span class="spec-val" id="spec-shipping">—</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-label">Payment</span>
+            <span class="spec-val">PayPal (Secure)</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-label">Condition</span>
+            <span class="spec-val">As described</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video (shown if exists) -->
+    <div id="video-section" style="display:none;margin-bottom:80px;">
+      <p class="section-label" style="margin-bottom:16px;">Watch in Motion</p>
+      <div class="video-wrap" id="video-wrap"></div>
+    </div>
+
+    <!-- Full Description -->
+    <div style="max-width:760px;margin-bottom:80px;">
+      <p class="section-label" style="margin-bottom:16px;">Details & Description</p>
+      <div id="full-desc" style="color:var(--muted);line-height:2.1;font-size:15px;white-space:pre-wrap;"></div>
+    </div>
+
+    <!-- Back to Collection -->
+    <div style="text-align:center;border-top:1px solid var(--border);padding-top:60px;">
+      <p style="font-size:11px;letter-spacing:3px;color:var(--muted);margin-bottom:24px;text-transform:uppercase;">Continue Browsing</p>
+      <a href="../index.html#collection" class="btn-gold">Back to Collection</a>
+    </div>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer id="footer">
+  <div class="footer-logo">Horlogerie</div>
+  <div class="footer-copy">© 2025 HORLOGERIE. All rights reserved.</div>
+  <div class="footer-links">
+    <a href="../index.html#collection">Collection</a>
+    <a href="../index.html#about">About</a>
+  </div>
+</footer>
+
+<div id="checkout-overlay" onclick="overlayClose(event)">
+  <div id="checkout-modal">
+    <button class="modal-close" onclick="closeCheckout()">✕</button>
+    <h2>Shipping Information</h2>
+    <p class="modal-subtitle">Please fill in your details before proceeding to payment</p>
+    <div class="modal-order-summary">
+      <span class="order-name" id="modal-watch-name">—</span>
+      <span class="order-total" id="modal-total">USD —</span>
+    </div>
+    <p class="modal-section-label">Contact</p>
+    <div class="form-row">
+      <div class="field-group"><label>Full Name *</label><input type="text" id="f-name" placeholder="John Smith"></div>
+      <div class="field-group"><label>Email *</label><input type="email" id="f-email" placeholder="john@email.com"></div>
+    </div>
+    <div class="form-row full" style="margin-bottom:0;">
+      <div class="field-group"><label>Phone / WhatsApp</label><input type="tel" id="f-phone" placeholder="+1 555 000 0000"></div>
+    </div>
+    <hr class="modal-divider">
+    <p class="modal-section-label">Shipping Address</p>
+    <div class="form-row full">
+      <div class="field-group"><label>Address Line 1 *</label><input type="text" id="f-addr1" placeholder="123 Main Street"></div>
+    </div>
+    <div class="form-row full">
+      <div class="field-group"><label>Address Line 2</label><input type="text" id="f-addr2" placeholder="Apt, Suite, Floor (optional)"></div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>City *</label><input type="text" id="f-city" placeholder="New York"></div>
+      <div class="field-group"><label>State / Province</label><input type="text" id="f-state" placeholder="NY"></div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>Postal Code *</label><input type="text" id="f-zip" placeholder="10001"></div>
+      <div class="field-group"><label>Country *</label><input type="text" id="f-country" placeholder="United States"></div>
+    </div>
+    <hr class="modal-divider">
+    <p class="modal-section-label">Order Notes <span style="font-size:10px;color:var(--muted)">(optional)</span></p>
+    <div class="form-row full" style="margin-bottom:0;">
+      <div class="field-group"><textarea id="f-notes" placeholder="Special delivery instructions, questions, etc."></textarea></div>
+    </div>
+    <button id="proceed-btn" onclick="proceedToPayPal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7.02 21.898L7.77 17H4.5l2.22-13.898h6.03c2.49 0 4.17 1.14 4.53 3.12.18.99.12 1.92-.18 2.76C18.66 10.23 19.5 11.7 19.5 13.5c0 3.6-2.94 5.4-6.12 5.4H11.1l-.48 3h-3.6z"/></svg>
+      Continue to PayPal
+    </button>
+    <p class="modal-note">Your information is saved securely.<br>You will be redirected to PayPal to complete payment.</p>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp }
+                           from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB7SY3k0835AyM1fLDtOs0thPrg3cmxifk",
+  authDomain: "gold-bed6c.firebaseapp.com",
+  projectId: "gold-bed6c",
+  storageBucket: "gold-bed6c.firebasestorage.app",
+  messagingSenderId: "498200351921",
+  appId: "1:498200351921:web:66e590427b3457a43afe90"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// Get slug from URL param ?slug=xxx OR from filename
+const urlParams = new URLSearchParams(location.search);
+const slug = urlParams.get('slug') || location.pathname.split('/').pop().replace('.html','');
+
+async function loadWatch() {
+  try {
+    const q    = query(collection(db,'watches'), where('slug','==',slug));
+    const snap = await getDocs(q);
+    if (snap.empty) { showError('Watch not found.'); return; }
+
+    const w = snap.docs[0].data();
+    document.getElementById('spinner').remove();
+    document.getElementById('watch-detail').style.display = 'block';
+
+    // SEO
+    document.title = `${w.name} — HORLOGERIE`;
+    setMeta('og:title',       `${w.name} — HORLOGERIE`);
+    setMeta('og:description', w.description?.slice(0,160) || '');
+    setMeta('og:image',       w.images?.[0] || '');
+    setMeta('og:url',         location.href);
+    setMeta('description',    w.description?.slice(0,160) || '');
+    // JSON-LD
+    const ld = document.createElement('script');
+    ld.type = 'application/ld+json';
+    ld.text = JSON.stringify({
+      "@context":"https://schema.org","@type":"Product",
+      "name": w.name, "image": w.images||[],
+      "description": w.description||'',
+      "offers":{"@type":"Offer","priceCurrency":"USD","price": w.price,
+                "availability":"https://schema.org/InStock"}
+    });
+    document.head.appendChild(ld);
+
+    // Breadcrumb + title
+    document.getElementById('bc-name').textContent  = w.name;
+    document.getElementById('detail-brand').textContent = (w.brand || 'Fine Watch').toUpperCase();
+    document.getElementById('detail-name').textContent  = w.name;
+    document.getElementById('detail-price').textContent = `USD ${Number(w.price).toLocaleString()}`;
+    const ship = w.shipping > 0 ? `+ Shipping: USD ${Number(w.shipping).toLocaleString()}` : 'Free Shipping';
+    document.getElementById('detail-shipping').textContent = ship;
+    document.getElementById('spec-shipping').textContent   = ship;
+    document.getElementById('detail-desc').textContent = w.description?.slice(0,220) + (w.description?.length>220?'…':'') || '';
+    document.getElementById('full-desc').textContent   = w.description || '';
+
+    // Gallery
+    const imgs = w.images || [];
+    const mainImg = document.getElementById('main-img');
+    if (imgs.length) {
+      mainImg.src = imgs[0]; mainImg.alt = w.name;
+      const thumbs = document.getElementById('thumbs');
+      imgs.forEach((src, i) => {
+        const d = document.createElement('div');
+        d.className = 'thumb' + (i===0?' active':'');
+        d.innerHTML = `<img src="${src}" alt="${w.name} ${i+1}">`;
+        d.onclick = () => {
+          mainImg.src = src;
+          document.querySelectorAll('.thumb').forEach(t=>t.classList.remove('active'));
+          d.classList.add('active');
+        };
+        thumbs.appendChild(d);
+      });
+    }
+
+    // Video (YouTube or direct URL)
+    if (w.video) {
+      const sec = document.getElementById('video-section');
+      sec.style.display = 'block';
+      const wrap = document.getElementById('video-wrap');
+      const ytMatch = w.video.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+      if (ytMatch) {
+        wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}" allowfullscreen loading="lazy"></iframe>`;
+      } else {
+        wrap.innerHTML = `<video controls src="${w.video}" style="width:100%;"></video>`;
+        wrap.style.paddingBottom = '0'; wrap.style.height = 'auto';
+      }
+    }
+
+    // Store watch data for PayPal
+    window._watch = w;
+
+    // Check tracking if thankyou or email param present
+    const emailParam = urlParams.get('email');
+    if (emailParam) loadTracking(w.slug || slug, emailParam);
+
+  } catch(e) {
+    showError('Failed to load watch: ' + e.message);
+  }
+}
+
+// ── Load tracking info for buyer ──────────────────────
+async function loadTracking(watchSlug, email) {
+  try {
+    const q    = query(collection(db,'orders'),
+                       where('watchSlug','==', watchSlug),
+                       where('buyer.email','==', email));
+    const snap = await getDocs(q);
+    if (snap.empty) return;
+    // Use most recent order
+    const orders = snap.docs.map(d => d.data()).sort((a,b) => (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+    const o = orders[0];
+    const banner = document.getElementById('tracking-banner');
+    const statusMap = {
+      pending_payment: 'Pending Payment',
+      paid:            'Payment Confirmed',
+      shipped:         'Shipped',
+      in_transit:      'In Transit',
+      delivered:       'Delivered',
+    };
+    const statusText = statusMap[o.deliveryStatus || o.status] || 'Order Placed';
+    document.getElementById('tracking-status-text').textContent = statusText;
+    let infoHtml = '';
+    if (o.trackingNumber) {
+      const carrierUrls = {
+        'DHL':        `https://www.dhl.com/en/express/tracking.html?AWB=${o.trackingNumber}`,
+        'FedEx':      `https://www.fedex.com/apps/fedextrack/?action=track&tracknumbers=${o.trackingNumber}`,
+        'EMS':        `https://www.ems.com.cn/queryList?mailNum=${o.trackingNumber}`,
+        'UPS':        `https://www.ups.com/track?tracknum=${o.trackingNumber}`,
+        'SF Express': `https://www.sf-international.com/us/en/dynamic_function/waybill/#search/bill-number/${o.trackingNumber}`,
+      };
+      const trackUrl = carrierUrls[o.carrier] || `https://www.google.com/search?q=${encodeURIComponent((o.carrier||'')+' '+o.trackingNumber)}`;
+      const shippedDate = o.shippedAt?.toDate ? o.shippedAt.toDate().toLocaleDateString('en-US',{dateStyle:'medium'}) : '—';
+      infoHtml = `Carrier: ${o.carrier||'—'} &nbsp;·&nbsp; Shipped: ${shippedDate}<br>
+                  Tracking: <a href="${trackUrl}" target="_blank">${o.trackingNumber} ↗</a>`;
+    } else {
+      infoHtml = `Your order is confirmed. Tracking will appear here once your watch is shipped.`;
+    }
+    document.getElementById('tracking-info-row').innerHTML = infoHtml;
+    banner.style.display = 'block';
+  } catch(e) { /* silently fail */ }
+}
+
+function setMeta(name, content) {
+  let el = document.querySelector(`meta[name="${name}"],meta[property="${name}"]`);
+  if (!el) { el = document.createElement('meta'); el.setAttribute(name.startsWith('og')?'property':'name', name); document.head.appendChild(el); }
+  el.setAttribute('content', content);
+}
+
+function showError(msg) {
+  document.getElementById('spinner').remove();
+  document.getElementById('content').innerHTML = `<p style="color:#e05555;text-align:center;padding:100px 0;letter-spacing:2px;">${msg}</p>`;
+}
+
+loadWatch();
+
+window._saveOrderAndPay = async function(buyer, watch) {
+  const btn = document.getElementById('proceed-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  try {
+    const total = (Number(watch.price) + Number(watch.shipping||0)).toFixed(2);
+    await addDoc(collection(db, 'orders'), {
+      watchSlug:     watch.slug || '',
+      watchName:     watch.name,
+      watchPrice:    watch.price,
+      watchShipping: watch.shipping || 0,
+      total:         parseFloat(total),
+      currency:      'USD',
+      status:        'pending_payment',
+      createdAt:     serverTimestamp(),
+      buyer: {
+        name:  buyer.name,
+        email: buyer.email,
+        phone: buyer.phone,
+        address: { line1:buyer.addr1, line2:buyer.addr2, city:buyer.city, state:buyer.state, zip:buyer.zip, country:buyer.country },
+        notes: buyer.notes,
+      }
+    });
+    const PAYPAL_EMAIL = "enzdwllg@gmail.com";
+    const params = new URLSearchParams({
+      cmd:'_xclick', business:PAYPAL_EMAIL, item_name:watch.name, amount:total,
+      currency_code:'USD', custom:buyer.email,
+      return:location.href.split('?')[0]+'?thankyou=1&email='+encodeURIComponent(buyer.email),
+      cancel_return:location.href.split('?')[0]
+    });
+    window.open('https://www.paypal.com/cgi-bin/webscr?'+params.toString(),'_blank');
+    closeCheckout();
+  } catch(err) {
+    btn.disabled = false;
+    btn.textContent = 'Continue to PayPal';
+    alert('Failed to save order: ' + err.message);
+  }
+};</script>
+
+<script>
+// Checkout modal
+function openCheckout() {
+  const w = window._watch;
+  if (!w) return;
+  const total = (Number(w.price)+Number(w.shipping||0)).toLocaleString('en-US',{minimumFractionDigits:2});
+  document.getElementById('modal-watch-name').textContent = w.name;
+  document.getElementById('modal-total').textContent = `USD ${total}`;
+  document.getElementById('checkout-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeCheckout() {
+  document.getElementById('checkout-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function overlayClose(e) {
+  if (e.target === document.getElementById('checkout-overlay')) closeCheckout();
+}
+function proceedToPayPal() {
+  const required = {'f-name':'Full Name','f-email':'Email','f-addr1':'Address','f-city':'City','f-zip':'Postal Code','f-country':'Country'};
+  let valid = true;
+  Object.keys(required).forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('error');
+    if (!el.value.trim()) { el.classList.add('error'); valid = false; }
+  });
+  const email = document.getElementById('f-email');
+  if (email.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) { email.classList.add('error'); valid = false; }
+  if (!valid) { showToast('Please fill in all required fields.'); return; }
+  window._saveOrderAndPay({
+    name:    document.getElementById('f-name').value.trim(),
+    email:   document.getElementById('f-email').value.trim(),
+    phone:   document.getElementById('f-phone').value.trim(),
+    addr1:   document.getElementById('f-addr1').value.trim(),
+    addr2:   document.getElementById('f-addr2').value.trim(),
+    city:    document.getElementById('f-city').value.trim(),
+    state:   document.getElementById('f-state').value.trim(),
+    zip:     document.getElementById('f-zip').value.trim(),
+    country: document.getElementById('f-country').value.trim(),
+    notes:   document.getElementById('f-notes').value.trim(),
+  }, window._watch);
+}
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeCheckout(); });
+
+// Thank you message
+if (location.search.includes('thankyou=1')) {
+  setTimeout(() => {
+    const t = document.getElementById('toast');
+    t.textContent = '✓ Thank you for your order! We will contact you shortly.';
+    t.className = 'show';
+    setTimeout(()=>t.className='', 6000);
+  }, 800);
+  // Auto-load tracking if email in URL
+  const _email = new URLSearchParams(location.search).get('email');
+  const _slug  = new URLSearchParams(location.search).get('slug') || location.pathname.split('/').pop().replace('.html','');
+  if (_email && window._watch) loadTracking(_slug, _email);
+}
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + type;
+  setTimeout(() => t.className = '', 3000);
+}
+</script>
+
+<div id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="" style="max-width:200vw;max-height:200vh;">
+</div>
+<script>
+function openLightbox(){
+  const src = document.getElementById('main-img').src;
+  const img = document.getElementById('lightbox-img');
+  const mainImg = document.getElementById('main-img');
+  img.src = src;
+  // Calculate 2x of the displayed image size
+  const rect = mainImg.getBoundingClientRect();
+  const w = Math.min(rect.width * 2, window.innerWidth * 0.95);
+  const h = Math.min(rect.height * 2, window.innerHeight * 0.95);
+  img.style.maxWidth = w + 'px';
+  img.style.maxHeight = h + 'px';
+  img.style.width = 'auto';
+  img.style.height = 'auto';
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
+</script>
+</body>
+</html>
