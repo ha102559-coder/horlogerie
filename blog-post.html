@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loading... — HORLOGERIE</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .post-hero {
+    min-height:55vh; display:flex; align-items:flex-end;
+    padding:130px 5% 60px; position:relative; overflow:hidden;
+    background:#0d0d0d;
+  }
+  .post-hero-bg {
+    position:absolute; inset:0; background-size:cover; background-position:center;
+    opacity:0.18; filter:grayscale(30%);
+  }
+  .post-hero-overlay {
+    position:absolute; inset:0;
+    background:linear-gradient(to top,rgba(10,10,10,1) 0%,rgba(10,10,10,0.5) 60%,transparent 100%);
+  }
+  .post-hero-content { position:relative; z-index:2; max-width:860px; }
+  .post-wrap { max-width:760px; margin:0 auto; padding:60px 5% 100px; }
+  .post-body { color:var(--muted); line-height:2.1; font-size:15px; }
+  .post-body h2 {
+    font-family:'Cormorant Garamond',serif; font-size:28px; color:var(--white);
+    font-weight:400; margin:40px 0 16px;
+  }
+  .post-body h3 {
+    font-family:'Cormorant Garamond',serif; font-size:22px; color:var(--white);
+    font-weight:400; margin:32px 0 12px;
+  }
+  .post-body p { margin-bottom:20px; }
+  .post-body ul, .post-body ol { margin:0 0 20px 24px; }
+  .post-body li { margin-bottom:8px; }
+  .post-body strong { color:var(--text); font-weight:500; }
+  .post-body hr {
+    border:none; border-top:1px solid var(--border); margin:40px 0;
+  }
+  .post-body blockquote {
+    border-left:2px solid var(--gold); padding-left:24px;
+    margin:28px 0; color:var(--text); font-style:italic;
+    font-family:'Cormorant Garamond',serif; font-size:20px; line-height:1.8;
+  }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a href="index.html" class="nav-logo">Hor<span>log</span>erie</a>
+  <div class="nav-links">
+    <a href="index.html#collection">Collection</a>
+    <a href="blog.html" style="color:var(--gold);">Blog</a>
+    <a href="admin/index.html"><button class="nav-admin-btn">Admin</button></a>
+  </div>
+</nav>
+
+<div id="spinner-wrap" style="display:flex;align-items:center;justify-content:center;min-height:100vh;">
+  <div class="spinner"></div>
+</div>
+
+<div id="post-content" style="display:none;">
+  <div class="post-hero" id="post-hero">
+    <div class="post-hero-bg" id="post-hero-bg"></div>
+    <div class="post-hero-overlay"></div>
+    <div class="post-hero-content">
+      <div style="margin-bottom:8px;">
+        <a href="blog.html" style="font-size:11px;letter-spacing:2px;color:var(--muted);">← Back to Journal</a>
+      </div>
+      <p class="section-label" id="post-tag" style="margin-bottom:16px;"></p>
+      <h1 class="serif" id="post-title"
+        style="font-size:clamp(32px,5vw,56px);font-weight:300;color:var(--white);line-height:1.15;margin-bottom:20px;"></h1>
+      <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--muted);display:flex;gap:20px;">
+        <span id="post-date"></span>
+        <span id="post-readtime"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="post-wrap">
+    <div class="post-body" id="post-body"></div>
+    <div style="border-top:1px solid var(--border);padding-top:40px;margin-top:60px;text-align:center;">
+      <p style="font-size:11px;letter-spacing:3px;color:var(--muted);margin-bottom:24px;text-transform:uppercase;">Continue Reading</p>
+      <a href="blog.html" class="btn-gold">Back to Journal</a>
+    </div>
+  </div>
+</div>
+
+<footer id="footer">
+  <div class="footer-logo">Horlogerie</div>
+  <div class="footer-copy">© 2025 HORLOGERIE. All rights reserved.</div>
+  <div class="footer-links">
+    <a href="index.html#collection">Collection</a>
+    <a href="blog.html">Blog</a>
+  </div>
+</footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB7SY3k0835AyM1fLDtOs0thPrg3cmxifk",
+  authDomain: "gold-bed6c.firebaseapp.com",
+  projectId: "gold-bed6c",
+  storageBucket: "gold-bed6c.firebasestorage.app",
+  messagingSenderId: "498200351921",
+  appId: "1:498200351921:web:66e590427b3457a43afe90"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+const slug = new URLSearchParams(location.search).get('slug');
+
+async function loadPost() {
+  if (!slug) { showError('Article not found.'); return; }
+  try {
+    const q    = query(collection(db,'blog_posts'), where('slug','==',slug));
+    const snap = await getDocs(q);
+    if (snap.empty) { showError('Article not found.'); return; }
+    const p = snap.docs[0].data();
+
+    document.title = `${p.title} — HORLOGERIE`;
+    document.getElementById('spinner-wrap').style.display = 'none';
+    document.getElementById('post-content').style.display = 'block';
+
+    if (p.coverImage) {
+      document.getElementById('post-hero-bg').style.backgroundImage = `url('${p.coverImage}')`;
+    }
+    document.getElementById('post-tag').textContent   = p.tag || '';
+    document.getElementById('post-title').textContent = p.title;
+    const date = p.createdAt?.toDate
+      ? p.createdAt.toDate().toLocaleDateString('en-US',{day:'numeric',month:'long',year:'numeric'})
+      : '';
+    document.getElementById('post-date').textContent     = date;
+    document.getElementById('post-readtime').textContent = p.readTime ? `${p.readTime} min read` : '';
+    document.getElementById('post-body').innerHTML       = p.contentHtml || p.content || '';
+  } catch(e) {
+    showError('Failed to load article: ' + e.message);
+  }
+}
+
+function showError(msg) {
+  document.getElementById('spinner-wrap').innerHTML =
+    `<p style="color:#e05555;text-align:center;padding:100px 0;letter-spacing:2px;">${msg}</p>`;
+}
+
+loadPost();
+</script>
+</body>
+</html>
