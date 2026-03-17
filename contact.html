@@ -273,45 +273,111 @@
   </div>
 </div>
 
-<script>
-let role='client',messages=[],closed=false;
-function setRole(r){
-  role=r;
-  document.getElementById('btn-client').className='role-btn'+(r==='client'?' active-client':'');
-  document.getElementById('btn-merchant').className='role-btn'+(r==='merchant'?' active-merchant':'');
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, doc, setDoc,
+         onSnapshot, serverTimestamp, updateDoc, query, orderBy }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyB7SY3k0835AyM1fLDtOs0thPrg3cmxifk",
+  authDomain: "gold-bed6c.firebaseapp.com",
+  projectId: "gold-bed6c",
+  storageBucket: "gold-bed6c.firebasestorage.app",
+  messagingSenderId: "498200351921",
+  appId: "1:498200351921:web:66e590427b3457a43afe90",
+  measurementId: "G-LH3KM19B2W"
+});
+
+const auth = getAuth(app);
+const db = getFirestore(app);
+let currentUser = null;
+let currentEnquiryId = null;
+
+// 登入
+onAuthStateChanged(auth, user => { currentUser = user; });
+
+async function loginAndSubmit() {
+  if (!currentUser) {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  }
+  submitForm();
 }
-function submitForm(){
-  const fn=document.getElementById('fname').value.trim();
-  const ln=document.getElementById('lname').value.trim();
-  const sub=document.getElementById('subject').value.trim();
-  const msg=document.getElementById('message').value.trim();
-  const type=document.getElementById('issue-type').value;
-  if(!sub||!msg){alert('Please complete the subject and message fields.');return;}
-  const ref='MH-'+Date.now().toString().slice(-6);
-  const t=ts();
-  messages=[{role:'client',text:msg,time:t}];
-  document.getElementById('ticket-subject-display').textContent=sub;
-  document.getElementById('ticket-meta').textContent='Reference '+ref+' · Submitted '+t;
-  document.getElementById('ref-no').textContent=ref;
-  document.getElementById('ref-type').textContent=type;
-  document.getElementById('ref-client').textContent=(fn||'Anonymous')+' '+(ln||'');
-  document.getElementById('ref-time').textContent=t;
-  document.getElementById('new-form-view').style.display='none';
-  document.getElementById('ticket-view').style.display='block';
-  render();
+
+// 送出表單 → 存進 Firestore
+async function submitForm() {
+  const fn    = document.getElementById('fname').value.trim();
+  const sub   = document.getElementById('subject').value.trim();
+  const msg   = document.getElementById('message').value.trim();
+  const type  = document.getElementById('issue-type').value;
+  if (!sub || !msg) { alert('Please complete required fields.'); return; }
+
+  const ref = 'MH-' + Date.now().toString().slice(-6);
+
+  // 建立 enquiry document
+  const enquiryRef = await addDoc(collection(db, 'enquiries'), {
+    ref, subject: sub, type,
+    clientName: currentUser.displayName || fn || 'Anonymous',
+    clientEmail: currentUser.email,
+    clientUid: currentUser.uid,
+    status: 'open',
+    createdAt: serverTimestamp()
+  });
+
+  currentEnquiryId = enquiryRef.id;
+
+  // 第一則訊息
+  await addDoc(collection(db, 'enquiries', currentEnquiryId, 'messages'), {
+    role: 'client', text: msg, time: serverTimestamp()
+  });
+
+  // 切換到對話畫面
+  showTicketView(ref, sub, type, fn);
+  listenMessages(); // 開始即時監聽
 }
-function sendReply(){
-  if(closed)return;
-  const inp=document.getElementById('reply-input');
-  const t=inp.value.trim();if(!t)return;
-  messages.push({role,text:t,time:ts()});
-  inp.value='';render();
+
+// 即時監聽訊息（onSnapshot）
+function listenMessages() {
+  const q = query(
+    collection(db, 'enquiries', currentEnquiryId, 'messages'),
+    orderBy('time')
+  );
+  onSnapshot(q, snapshot => {
+    messages = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    render();
+  });
 }
-function closeTicket(){
-  if(closed)return;closed=true;
-  messages.push({role:'system',text:'This enquiry has been resolved and closed. Thank you for contacting Maison Horlogère.'});
-  const p=document.getElementById('status-pill');
-  p.className='status-pill closed';
-  document.getElementById('status-text').textContent='Closed';
-  p.querySelector('.blink').style.display='none';
-  doc
+
+// 回覆
+async function sendReply() {
+  if (closed || !currentEnquiryId) return;
+  const inp = document.getElementById('reply-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  await addDoc(collection(db, 'enquiries', currentEnquiryId, 'messages'), {
+    role, text, time: serverTimestamp()
+  });
+  inp.value = '';
+}
+
+// 結單
+async function closeTicket() {
+  if (closed || !currentEnquiryId) return;
+  closed = true;
+  await updateDoc(doc(db, 'enquiries', currentEnquiryId), { status: 'closed' });
+  await addDoc(collection(db, 'enquiries', currentEnquiryId, 'messages'), {
+    role: 'system',
+    text: 'This enquiry has been resolved and closed. Thank you for contacting Maison Horlogère.',
+    time: serverTimestamp()
+  });
+}
+
+// 把這些函式掛到 window 讓 HTML onclick 能呼叫
+window.submitForm  = loginAndSubmit;
+window.sendReply   = sendReply;
+window.closeTicket = closeTicket;
+</script>
