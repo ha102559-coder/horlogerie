@@ -1,0 +1,318 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#b8973a;
+  --gold2:#d4af5a;
+  --gold-light:rgba(184,151,58,0.12);
+  --bg:#0e0c0a;
+  --surface:#141210;
+  --surface2:#1a1714;
+  --border:rgba(184,151,58,0.18);
+  --border2:rgba(184,151,58,0.32);
+  --text:#e8e0d0;
+  --muted:#7a7060;
+  --muted2:#5a5248;
+  --radius:4px;
+}
+.wrap{background:var(--bg);min-height:640px;font-family:'Montserrat',sans-serif;color:var(--text)}
+
+.hero-bar{position:relative;padding:2.5rem 2.5rem 2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;overflow:hidden}
+.hero-bar::after{content:'';position:absolute;bottom:0;left:2.5rem;width:60px;height:1px;background:var(--gold)}
+.brand{display:flex;align-items:center;gap:14px}
+.brand-icon{width:38px;height:38px;border:1px solid var(--border2);border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative}
+.brand-icon::before{content:'';position:absolute;width:24px;height:24px;border:1px solid var(--gold);border-radius:50%}
+.brand-icon::after{content:'';position:absolute;width:2px;height:10px;background:var(--gold);border-radius:1px;transform-origin:bottom;transform:translateY(-3px)}
+.brand-dot{position:absolute;width:3px;height:3px;background:var(--gold);border-radius:50%;top:8px;left:50%;transform:translateX(-50%)}
+.brand-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;letter-spacing:0.18em;text-transform:uppercase;color:var(--text)}
+.brand-tagline{font-size:9px;letter-spacing:0.22em;color:var(--muted);text-transform:uppercase;margin-top:2px;font-weight:400}
+.nav-links{display:flex;gap:24px;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)}
+.nav-links span{cursor:pointer;transition:color 0.2s}.nav-links span:hover{color:var(--gold)}
+
+.content{padding:2.5rem}
+.eyebrow{font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-bottom:0.75rem;font-weight:500}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;letter-spacing:0.06em;color:var(--text);line-height:1.15;margin-bottom:0.5rem}
+.page-title em{font-style:italic;color:var(--gold2)}
+.page-desc{font-size:12px;line-height:1.8;color:var(--muted);margin-bottom:2.5rem;font-weight:300;max-width:460px;letter-spacing:0.02em}
+
+.two-col{display:grid;grid-template-columns:1fr 320px;gap:2rem}
+@media(max-width:640px){.two-col{grid-template-columns:1fr}}
+
+.form-card{background:var(--surface);border:1px solid var(--border);padding:2rem;position:relative}
+.form-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--gold),transparent)}
+
+.field{margin-bottom:1.5rem}
+.field label{display:block;font-size:9px;letter-spacing:0.25em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:500}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--surface2);
+  border:none;border-bottom:1px solid var(--border2);
+  color:var(--text);font-family:'Montserrat',sans-serif;
+  font-size:13px;font-weight:300;
+  padding:10px 2px;outline:none;
+  transition:border-color 0.2s;
+  border-radius:0;
+  letter-spacing:0.03em;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-bottom-color:var(--gold)}
+.field select{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23b8973a'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 4px center}
+.field select option{background:#1a1714}
+.field textarea{resize:none;min-height:100px;line-height:1.7}
+
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+
+.submit-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;background:transparent;border:1px solid var(--border2);color:var(--gold);font-family:'Montserrat',sans-serif;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;cursor:pointer;margin-top:0.5rem;transition:all 0.25s;font-weight:500}
+.submit-btn:hover{background:var(--gold-light);border-color:var(--gold)}
+.submit-btn svg{transition:transform 0.25s}
+.submit-btn:hover svg{transform:translateX(4px)}
+
+.sidebar{display:flex;flex-direction:column;gap:1.25rem}
+.info-block{background:var(--surface);border:1px solid var(--border);padding:1.5rem;position:relative}
+.info-block::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--gold),transparent)}
+.info-title{font-size:9px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;font-weight:500}
+.info-item{display:flex;gap:12px;margin-bottom:0.85rem;align-items:flex-start}
+.info-icon{width:28px;height:28px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.info-icon svg{width:12px;height:12px;stroke:var(--gold);fill:none;stroke-width:1.5}
+.info-label{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.info-val{font-size:12px;color:var(--text);font-weight:300;letter-spacing:0.03em}
+
+.divider-ornament{display:flex;align-items:center;gap:10px;margin:0.25rem 0}
+.divider-ornament span{flex:1;height:1px;background:var(--border)}
+.divider-ornament i{width:5px;height:5px;border:1px solid var(--gold);transform:rotate(45deg)}
+
+.thread-section{margin-top:2rem;padding-top:2rem;border-top:1px solid var(--border)}
+.thread-eyebrow{font-size:9px;letter-spacing:0.28em;text-transform:uppercase;color:var(--gold);margin-bottom:1.25rem;display:flex;align-items:center;gap:12px}
+.thread-eyebrow span{flex:1;height:1px;background:var(--border)}
+.messages{display:flex;flex-direction:column;gap:1.25rem;margin-bottom:1.5rem}
+.msg-row{display:flex;gap:12px}
+.msg-row.from-merchant{flex-direction:row-reverse}
+.avatar-sq{width:32px;height:32px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:9px;letter-spacing:0.1em;flex-shrink:0;color:var(--muted);font-weight:500}
+.msg-row.from-merchant .avatar-sq{border-color:rgba(184,151,58,0.35);color:var(--gold)}
+.bubble{max-width:82%;padding:12px 16px;font-size:12px;line-height:1.7;font-weight:300;letter-spacing:0.02em}
+.bubble.client{background:var(--surface2);border:1px solid var(--border);color:var(--text)}
+.bubble.merchant{background:rgba(184,151,58,0.06);border:1px solid rgba(184,151,58,0.2);color:#d4c8a8}
+.msg-time{font-size:10px;color:var(--muted2);margin-top:4px;letter-spacing:0.05em;font-family:'Montserrat',sans-serif}
+.msg-row.from-merchant .msg-time{text-align:right}
+
+.reply-wrap{background:var(--surface2);border:1px solid var(--border);padding:1.25rem}
+.role-bar{display:flex;align-items:center;gap:8px;margin-bottom:1rem}
+.role-label{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.role-btn{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:4px 14px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:'Montserrat',sans-serif;transition:all 0.15s}
+.role-btn.active-client{border-color:rgba(184,151,58,0.5);color:var(--gold2)}
+.role-btn.active-merchant{border-color:rgba(184,151,58,0.5);color:var(--gold2);background:var(--gold-light)}
+.reply-input{width:100%;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--text);font-family:'Montserrat',sans-serif;font-size:12px;font-weight:300;padding:8px 0;outline:none;resize:none;min-height:60px;letter-spacing:0.02em;line-height:1.7;transition:border-color 0.2s}
+.reply-input:focus{border-bottom-color:var(--gold)}
+.reply-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:1rem}
+.act-btn{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:8px 18px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:'Montserrat',sans-serif;transition:all 0.2s}
+.act-btn:hover{color:var(--text);border-color:var(--muted)}
+.act-btn.send{border-color:var(--border2);color:var(--gold);display:flex;align-items:center;gap:8px}
+.act-btn.send:hover{background:var(--gold-light);border-color:var(--gold)}
+.status-pill{display:inline-flex;align-items:center;gap:5px;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:3px 10px;border:1px solid rgba(184,151,58,0.35);color:var(--gold);font-weight:500}
+.status-pill.closed{border-color:var(--border);color:var(--muted)}
+.blink{animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.sys-msg{text-align:center;font-size:10px;color:var(--muted2);letter-spacing:0.15em;padding:6px 0;font-style:italic}
+
+#ticket-view{display:none}
+</style>
+
+<div class="wrap">
+  <div class="hero-bar">
+    <div class="brand">
+      <div class="brand-icon">
+        <div class="brand-dot"></div>
+      </div>
+      <div>
+        <div class="brand-name">Horlogère</div>
+        <div class="brand-tagline">Since 2010 · China</div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <span>Home</span>
+      <span onclick="" style="color:var(--gold)">Contact</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div id="new-form-view">
+      <div class="eyebrow">Client Services</div>
+      <div class="page-title">A Matter of<br><em>Correspondence</em></div>
+      <div class="page-desc">Our dedicated client advisors are here to assist you with any enquiry regarding our timepieces, bespoke orders, or after-sales service. Every message is read with the utmost attention.</div>
+
+      <div class="two-col">
+        <div class="form-card">
+          <div class="field-row">
+            <div class="field">
+              <label>First Name</label>
+              <input type="text" id="fname" placeholder="James"/>
+            </div>
+            <div class="field">
+              <label>Last Name</label>
+              <input type="text" id="lname" placeholder="Beaumont"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>Email Address</label>
+            <input type="text" id="email" placeholder="j.beaumont@domain.com"/>
+          </div>
+          <div class="field">
+            <label>Nature of Enquiry</label>
+            <select id="issue-type">
+              <option>Order & Delivery Status</option>
+              <option>Bespoke & Customisation</option>
+              <option>After-Sales & Service</option>
+              <option>Authentication & Warranty</option>
+              <option>General Enquiry</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Subject</label>
+            <input type="text" id="subject" placeholder="Briefly describe your enquiry…"/>
+          </div>
+          <div class="field">
+            <label>Message</label>
+            <textarea id="message" placeholder="Please describe your enquiry in detail. Include any reference numbers, order IDs, or model names where relevant…"></textarea>
+          </div>
+          <button class="submit-btn" onclick="submitForm()">
+            <span>Send Enquiry</span>
+            <svg width="16" height="10" viewBox="0 0 16 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M0 5h14M10 1l4 4-4 4"/></svg>
+          </button>
+        </div>
+
+        <div class="sidebar">
+          <div class="info-block">
+            <div class="info-title">Our Ateliers</div>
+            <div class="info-item">
+              <div class="info-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>
+              <div>
+                <div class="info-label">Geneva Boutique</div>
+                <div class="info-val">Guangzhou Augustus Watch Co., Ltd.</div>
+              </div>
+            </div>
+            <div class="divider-ornament"><span></span><i></i><span></span></div>
+            <div class="info-item" style="margin-top:0.85rem">
+              <div class="info-icon"><svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg></div>
+              <div>
+                <div class="info-label">Phone</div>
+                <div class="info-val"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-block">
+            <div class="info-title">Response Times</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.9;font-weight:300">
+              <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span>General Enquiry</span><span style="color:var(--gold)">24 hrs</span></div>
+              <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span>After-Sales</span><span style="color:var(--gold)">48 hrs</span></div>
+              <div style="display:flex;justify-content:space-between;padding:4px 0"><span>Bespoke Orders</span><span style="color:var(--gold)">72 hrs</span></div>
+            </div>
+          </div>
+
+          <div class="info-block" style="text-align:center;padding:1.75rem 1.5rem">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;color:var(--gold2);margin-bottom:8px">"Time is the ultimate luxury."</div>
+            <div style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted)">— Maison Horlogère</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="ticket-view">
+      <div class="eyebrow">Client Services</div>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:0.5rem">
+        <div class="page-title" style="font-size:26px;margin-bottom:0" id="ticket-subject-display">Your Enquiry</div>
+        <span class="status-pill" id="status-pill"><span class="blink" style="display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--gold);margin-right:2px"></span><span id="status-text">Open</span></span>
+      </div>
+      <div style="font-size:10px;letter-spacing:0.12em;color:var(--muted);margin-bottom:2rem" id="ticket-meta"></div>
+
+      <div class="two-col">
+        <div class="form-card" style="padding:1.75rem">
+          <div class="thread-eyebrow">Correspondence <span></span></div>
+          <div class="messages" id="thread-messages"></div>
+
+          <div class="reply-wrap">
+            <div class="role-bar">
+              <div class="role-label">Reply as</div>
+              <button class="role-btn active-client" id="btn-client" onclick="setRole('client')">Client</button>
+              <button class="role-btn" id="btn-merchant" onclick="setRole('merchant')">Maison</button>
+            </div>
+            <textarea class="reply-input" id="reply-input" placeholder="Compose your reply…"></textarea>
+            <div class="reply-actions">
+              <button class="act-btn" onclick="closeTicket()">Close Enquiry</button>
+              <button class="act-btn send" onclick="sendReply()">
+                <span>Send</span>
+                <svg width="14" height="9" viewBox="0 0 14 9" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M0 4.5h12M8 1l4 3.5-4 3.5"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar">
+          <div class="info-block">
+            <div class="info-title">Enquiry Details</div>
+            <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:2">
+              <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:3px 0"><span>Reference</span><span style="color:var(--text)" id="ref-no">—</span></div>
+              <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:3px 0"><span>Type</span><span style="color:var(--text)" id="ref-type">—</span></div>
+              <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:3px 0"><span>Client</span><span style="color:var(--text)" id="ref-client">—</span></div>
+              <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Submitted</span><span style="color:var(--text)" id="ref-time">—</span></div>
+            </div>
+          </div>
+          <div class="info-block" style="text-align:center;padding:2rem 1.5rem">
+            <div style="width:44px;height:44px;border:1px solid var(--border2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;position:relative">
+              <div style="position:absolute;width:30px;height:30px;border:1px solid rgba(184,151,58,0.3);border-radius:50%"></div>
+              <div style="width:2px;height:11px;background:var(--gold);border-radius:1px;position:absolute;transform-origin:bottom;transform:translateY(-3px)"></div>
+              <div style="width:5px;height:5px;border:1px solid var(--gold);border-radius:50%;position:absolute;top:8px;left:50%;transform:translateX(-50%)"></div>
+            </div>
+            <div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted)">Dedicated service<br>since 1887</div>
+          </div>
+          <button class="submit-btn" onclick="newEnquiry()" style="margin-top:0">
+            <span>New Enquiry</span>
+            <svg width="14" height="9" viewBox="0 0 14 9" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M0 4.5h12M8 1l4 3.5-4 3.5"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let role='client',messages=[],closed=false;
+function setRole(r){
+  role=r;
+  document.getElementById('btn-client').className='role-btn'+(r==='client'?' active-client':'');
+  document.getElementById('btn-merchant').className='role-btn'+(r==='merchant'?' active-merchant':'');
+}
+function submitForm(){
+  const fn=document.getElementById('fname').value.trim();
+  const ln=document.getElementById('lname').value.trim();
+  const sub=document.getElementById('subject').value.trim();
+  const msg=document.getElementById('message').value.trim();
+  const type=document.getElementById('issue-type').value;
+  if(!sub||!msg){alert('Please complete the subject and message fields.');return;}
+  const ref='MH-'+Date.now().toString().slice(-6);
+  const t=ts();
+  messages=[{role:'client',text:msg,time:t}];
+  document.getElementById('ticket-subject-display').textContent=sub;
+  document.getElementById('ticket-meta').textContent='Reference '+ref+' · Submitted '+t;
+  document.getElementById('ref-no').textContent=ref;
+  document.getElementById('ref-type').textContent=type;
+  document.getElementById('ref-client').textContent=(fn||'Anonymous')+' '+(ln||'');
+  document.getElementById('ref-time').textContent=t;
+  document.getElementById('new-form-view').style.display='none';
+  document.getElementById('ticket-view').style.display='block';
+  render();
+}
+function sendReply(){
+  if(closed)return;
+  const inp=document.getElementById('reply-input');
+  const t=inp.value.trim();if(!t)return;
+  messages.push({role,text:t,time:ts()});
+  inp.value='';render();
+}
+function closeTicket(){
+  if(closed)return;closed=true;
+  messages.push({role:'system',text:'This enquiry has been resolved and closed. Thank you for contacting Maison Horlogère.'});
+  const p=document.getElementById('status-pill');
+  p.className='status-pill closed';
+  document.getElementById('status-text').textContent='Closed';
+  p.querySelector('.blink').style.display='none';
+  doc
