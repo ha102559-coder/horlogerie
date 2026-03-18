@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://horlogerie.netlify.app/sitemap.xml
+Sitemap: https://art-time.net/sitemap.xml
