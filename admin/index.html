@@ -108,7 +108,7 @@
 import { initializeApp }       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
                                from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, deleteDoc, doc, orderBy, query, updateDoc, serverTimestamp }
+import { getFirestore, collection, getDocs, deleteDoc, doc, orderBy, query, updateDoc, serverTimestamp, arrayUnion }
                                from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -214,16 +214,30 @@ async function loadEnquiries() {
   try {
     const q    = query(collection(db,'enquiries'), orderBy('createdAt','desc'));
     const snap = await getDocs(q);
-    spinner.remove();
+    if (spinner.parentNode) spinner.remove();
     if (snap.empty) { document.getElementById('no-enquiries').style.display='block'; return; }
     document.getElementById('enquiries-count').textContent = `(${snap.size})`;
+    list.innerHTML = '';
     snap.forEach(d => {
-      const e = d.data();
+      const e    = d.data();
       const date = e.createdAt?.toDate ? e.createdAt.toDate().toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'}) : '—';
       const msgs = e.messages || [];
-      const firstMsg = msgs[0]?.text || '—';
       const statusClass = e.status === 'open' ? 'status-pending' : 'status-paid';
       const statusLabel = e.status === 'open' ? 'Open' : 'Closed';
+
+      // Build message thread HTML
+      const threadHtml = msgs.map(m => {
+        if(m.role==='system') return `<div style="text-align:center;font-size:11px;color:var(--muted);padding:4px 0;letter-spacing:1px;">${m.text}</div>`;
+        const isMerchant = m.role === 'merchant';
+        return `<div style="display:flex;gap:10px;${isMerchant?'flex-direction:row-reverse;':''}margin-bottom:12px;">
+          <div style="width:32px;height:32px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;color:${isMerchant?'var(--gold)':'var(--muted)'};">${isMerchant?'MH':'C'}</div>
+          <div style="max-width:80%;">
+            <div style="padding:10px 14px;background:${isMerchant?'rgba(201,168,76,0.06)':'#111'};border:1px solid var(--border);font-size:12px;color:var(--text);line-height:1.8;white-space:pre-wrap;">${m.text}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px;${isMerchant?'text-align:right;':''}">${m.time||''}</div>
+          </div>
+        </div>`;
+      }).join('');
+
       const row = document.createElement('div');
       row.className = 'order-row';
       row.innerHTML = `
@@ -238,21 +252,44 @@ async function loadEnquiries() {
           </div>
         </div>
         <div class="order-detail">
-          <b>Reference:</b> ${e.ref||'—'}<br>
-          <b>Type:</b> ${e.type||'—'}<br>
-          <b>From:</b> ${e.name||'—'} &nbsp;(${e.email||'—'})<br>
-          <b>Submitted:</b> ${date}<br>
-          <br>
-          <b>Message:</b><br>
-          <div style="margin-top:8px;padding:12px;background:#111;border:1px solid var(--border);line-height:2;white-space:pre-wrap;">${firstMsg}</div>
+          <b>Reference:</b> ${e.ref||'—'} &nbsp;·&nbsp; <b>From:</b> ${e.name||'—'} (${e.email||'—'})<br><br>
+          <div id="thread-${d.id}" style="margin-bottom:16px;">${threadHtml}</div>
+          ${e.status==='open' ? `
+          <div style="border-top:1px solid var(--border);padding-top:14px;display:flex;gap:10px;align-items:flex-end;">
+            <textarea id="reply-${d.id}" placeholder="Reply as Maison Horlogère…"
+              style="flex:1;background:#0d0d0d;border:1px solid var(--border);color:var(--white);padding:10px 12px;font-size:12px;font-family:inherit;outline:none;resize:none;height:72px;transition:border-color .2s;"
+              onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            <button class="btn-sm" onclick="replyEnquiry('${d.id}',this)" style="white-space:nowrap;height:40px;">Send Reply</button>
+          </div>` : ''}
         </div>`;
       list.appendChild(row);
     });
   } catch(e) {
-    if (spinner.parentNode) spinner.remove();
+    if (spinner && spinner.parentNode) spinner.remove();
     list.innerHTML = `<p style="color:#e05555;">Error loading enquiries: ${e.message}</p>`;
   }
 }
+
+window.replyEnquiry = async (id, btn) => {
+  const textarea = document.getElementById(`reply-${id}`);
+  const text = textarea.value.trim();
+  if (!text) { showToast('Please write a reply first.'); return; }
+  btn.textContent = '...'; btn.disabled = true;
+  const entry = { role:'merchant', text, time: new Date().toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'}) };
+  try {
+    await updateDoc(doc(db,'enquiries',id), { messages: arrayUnion(entry) });
+    showToast('Reply sent!');
+    // Refresh enquiries tab
+    window._enquiriesLoaded = false;
+    document.getElementById('enquiries-list').innerHTML = '';
+    const sp = document.createElement('div'); sp.id='enquiries-spinner'; sp.className='spinner';
+    document.getElementById('tab-enquiries').prepend(sp);
+    loadEnquiries();
+  } catch(e) {
+    showToast('Error: ' + e.message);
+    btn.textContent = 'Send Reply'; btn.disabled = false;
+  }
+};
 
 window.closeEnquiry = async (id, btn) => {
   btn.textContent = '...'; btn.disabled = true;
