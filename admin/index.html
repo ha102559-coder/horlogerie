@@ -32,6 +32,13 @@
   .order-detail { display:none; margin-top:14px; padding:20px; background:#0d0d0d; border:1px solid var(--border); font-size:12px; color:var(--muted); line-height:2.4; }
   .order-detail.open { display:block; }
   .order-detail b { color:var(--white); font-weight:400; }
+  .tracking-form { margin-top:16px; padding-top:16px; border-top:1px solid var(--border); display:grid; grid-template-columns:1fr 1fr auto; gap:10px; align-items:end; }
+  .tracking-form select, .tracking-form input { background:#0a0a0a; border:1px solid var(--border); color:var(--white); padding:10px 12px; font-size:12px; font-family:inherit; outline:none; width:100%; box-sizing:border-box; }
+  .tracking-form select:focus, .tracking-form input:focus { border-color:var(--gold); }
+  .tracking-form label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:6px; }
+  .status-shipped { border-color:#4caf50; color:#4caf50; }
+  .status-in_transit { border-color:#2196f3; color:#2196f3; }
+  .status-delivered { border-color:#9c27b0; color:#9c27b0; }
 </style>
 </head>
 <body>
@@ -64,7 +71,6 @@
       <h1 class="serif" style="font-size:36px;font-weight:300;color:var(--white);">HORLOGERIE Admin</h1>
     </div>
     <a href="edit.html" class="btn-gold" style="white-space:nowrap;">+ Add Watch</a>
-    <a href="blog.html" class="btn-gold" style="white-space:nowrap;">Blog Manager</a>
   </div>
 
   <!-- Tabs -->
@@ -94,7 +100,7 @@
 import { initializeApp }       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
                                from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, deleteDoc, doc, orderBy, query, updateDoc }
+import { getFirestore, collection, getDocs, deleteDoc, doc, orderBy, query, updateDoc, serverTimestamp }
                                from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -234,7 +240,27 @@ async function loadOrders() {
           ${b.notes ? `<b>Notes:</b> ${b.notes}<br>` : ''}
           <br>
           <b>Order Date:</b> ${date}<br>
-          <b>Status:</b> ${statusLabel}
+          <b>Status:</b> ${statusLabel}<br>
+          ${o.trackingNumber ? `<br><b>Carrier:</b> ${o.carrier||'—'}<br><b>Tracking No:</b> <a href="${carrierUrl(o.carrier, o.trackingNumber)}" target="_blank" style="color:var(--gold);">${o.trackingNumber}</a><br><b>Shipped At:</b> ${o.shippedAt?.toDate ? o.shippedAt.toDate().toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'}) : '—'}<br>` : ''}
+          <div class="tracking-form">
+            <div>
+              <label>Carrier</label>
+              <select id="carrier-${d.id}">
+                <option value="">Select carrier</option>
+                <option value="DHL" ${o.carrier==='DHL'?'selected':''}>DHL</option>
+                <option value="FedEx" ${o.carrier==='FedEx'?'selected':''}>FedEx</option>
+                <option value="EMS" ${o.carrier==='EMS'?'selected':''}>EMS</option>
+                <option value="UPS" ${o.carrier==='UPS'?'selected':''}>UPS</option>
+                <option value="SF Express" ${o.carrier==='SF Express'?'selected':''}>SF Express</option>
+                <option value="Other" ${o.carrier==='Other'?'selected':''}>Other</option>
+              </select>
+            </div>
+            <div>
+              <label>Tracking Number</label>
+              <input type="text" id="tracking-${d.id}" value="${o.trackingNumber||''}" placeholder="e.g. 1234567890">
+            </div>
+            <button class="btn-sm" onclick="saveTracking('${d.id}', this)" style="white-space:nowrap;height:40px;">Save Tracking</button>
+          </div>
         </div>`;
       list.appendChild(row);
     });
@@ -243,6 +269,39 @@ async function loadOrders() {
     list.innerHTML = `<p style="color:#e05555;">Error loading orders: ${e.message}</p>`;
   }
 }
+
+// ── Carrier URL helper ─────────────────────────────────
+window.carrierUrl = function(carrier, num) {
+  const map = {
+    'DHL':        `https://www.dhl.com/en/express/tracking.html?AWB=${num}`,
+    'FedEx':      `https://www.fedex.com/apps/fedextrack/?action=track&tracknumbers=${num}`,
+    'EMS':        `https://www.ems.com.cn/queryList?mailNum=${num}`,
+    'UPS':        `https://www.ups.com/track?tracknum=${num}`,
+    'SF Express': `https://www.sf-international.com/us/en/dynamic_function/waybill/#search/bill-number/${num}`,
+  };
+  return map[carrier] || `https://www.google.com/search?q=${encodeURIComponent(carrier+' '+num)}`;
+};
+
+// ── Save tracking ──────────────────────────────────────
+window.saveTracking = async (id, btn) => {
+  const carrier  = document.getElementById(`carrier-${id}`).value;
+  const tracking = document.getElementById(`tracking-${id}`).value.trim();
+  if (!carrier || !tracking) { showToast('Please enter carrier and tracking number.'); return; }
+  btn.textContent = '...'; btn.disabled = true;
+  try {
+    await updateDoc(doc(db,'orders',id), {
+      carrier:        carrier,
+      trackingNumber: tracking,
+      deliveryStatus: 'shipped',
+      shippedAt:      serverTimestamp(),
+    });
+    showToast('Tracking saved!');
+    btn.textContent = '✓ Saved'; 
+  } catch(e) {
+    showToast('Error: ' + e.message);
+    btn.textContent = 'Save Tracking'; btn.disabled = false;
+  }
+};
 
 window.markPaid = async (id, btn) => {
   btn.textContent = '...'; btn.disabled = true;
