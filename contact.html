@@ -230,11 +230,6 @@
           <div class="messages" id="thread-messages"></div>
 
           <div class="reply-wrap">
-            <div class="role-bar">
-              <div class="role-label">Reply as</div>
-              <button class="role-btn active-client" id="btn-client" onclick="setRole('client')">Client</button>
-              <button class="role-btn" id="btn-merchant" onclick="setRole('merchant')">Maison</button>
-            </div>
             <textarea class="reply-input" id="reply-input" placeholder="Compose your reply…"></textarea>
             <div class="reply-actions">
               <button class="act-btn" onclick="closeTicket()">Close Enquiry</button>
@@ -276,7 +271,7 @@
 
 <script type="module">
 import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp }
+import { getFirestore, collection, addDoc, doc, updateDoc, getDoc, arrayUnion, serverTimestamp }
                           from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -341,23 +336,40 @@ window.submitForm = async function(){
     document.getElementById('new-form-view').style.display='none';
     document.getElementById('ticket-view').style.display='block';
     render();
+    // 每 15 秒重新讀取 Firestore，讓買家看到賣家的回覆
+    window._pollInterval = setInterval(async () => {
+      if(closed) { clearInterval(window._pollInterval); return; }
+      try {
+        const snap = await getDoc(doc(db,'enquiries',currentDocId));
+        if(snap.exists()){
+          messages = snap.data().messages || [];
+          render();
+        }
+      } catch(_){}
+    }, 15000);
   } catch(e){
     alert('Failed to send: '+e.message);
     btn.disabled=false; btn.querySelector('span').textContent='Send Enquiry';
   }
 };
 
-// ── Send reply (client-side only, no Firestore update needed for demo) ─
-window.setRole = function(r){
-  document.getElementById('btn-client').className='role-btn'+(r==='client'?' active-client':'');
-  document.getElementById('btn-merchant').className='role-btn'+(r==='merchant'?' active-merchant':'');
-};
-window.sendReply = function(){
-  if(closed)return;
-  const inp=document.getElementById('reply-input');
-  const t=inp.value.trim(); if(!t)return;
-  messages.push({role:'client',text:t,time:ts()});
-  inp.value=''; render();
+// ── 買家回覆 → 存進 Firestore ──────────────────────────
+window.sendReply = async function(){
+  if(closed) return;
+  const inp = document.getElementById('reply-input');
+  const t   = inp.value.trim();
+  if(!t) return;
+  const entry = {role:'client', text:t, time:ts()};
+  try {
+    await updateDoc(doc(db,'enquiries', currentDocId), {
+      messages: arrayUnion(entry)
+    });
+    messages.push(entry);
+    inp.value='';
+    render();
+  } catch(e){
+    alert('Failed to send reply: '+e.message);
+  }
 };
 window.closeTicket = function(){
   if(closed)return; closed=true;
@@ -369,6 +381,7 @@ window.closeTicket = function(){
   render();
 };
 window.newEnquiry = function(){
+  clearInterval(window._pollInterval);
   document.getElementById('ticket-view').style.display='none';
   document.getElementById('new-form-view').style.display='block';
   messages=[]; closed=false; currentDocId=null;
