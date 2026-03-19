@@ -1,4 +1,11 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact — Horlogerie</title>
+</head>
+<body>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -271,7 +278,7 @@
 
 <script type="module">
 import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, getDoc, arrayUnion, serverTimestamp }
+import { getFirestore, collection, addDoc, doc, updateDoc, arrayUnion, onSnapshot, serverTimestamp }
                           from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -285,104 +292,141 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
-let messages=[], closed=false, currentDocId=null;
+let messages = [], closed = false, currentDocId = null, unsubscribe = null;
 
-function ts(){ return new Date().toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'}); }
-
-function render(){
-  const el=document.getElementById('thread-messages');
-  el.innerHTML=messages.map(m=>{
-    if(m.role==='system') return `<div class="sys-msg">${m.text}</div>`;
-    const fromM=m.role==='merchant';
-    return `<div class="msg-row${fromM?' from-merchant':''}">
-      <div class="avatar-sq">${fromM?'MH':'YOU'}</div>
-      <div><div class="bubble ${fromM?'merchant':'client'}">${m.text}</div>
-      <div class="msg-time">${m.time}</div></div></div>`;
-  }).join('');
-  el.scrollTop=el.scrollHeight;
+function ts() {
+  return new Date().toLocaleString('en-US', { dateStyle:'medium', timeStyle:'short' });
 }
 
-// ── Submit new enquiry → save to Firestore ─────────────
-window.submitForm = async function(){
-  const fn  = document.getElementById('fname').value.trim();
-  const ln  = document.getElementById('lname').value.trim();
+function render() {
+  const el = document.getElementById('thread-messages');
+  el.innerHTML = messages.map(m => {
+    if (m.role === 'system') return `<div class="sys-msg">${m.text}</div>`;
+    const fromM = m.role === 'merchant';
+    return `<div class="msg-row${fromM ? ' from-merchant' : ''}">
+      <div class="avatar-sq">${fromM ? 'MH' : 'YOU'}</div>
+      <div>
+        <div class="bubble ${fromM ? 'merchant' : 'client'}">${m.text}</div>
+        <div class="msg-time">${m.time}</div>
+      </div>
+    </div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function setUItoClosed() {
+  closed = true;
+  const p = document.getElementById('status-pill');
+  if (p) {
+    p.className = 'status-pill closed';
+    document.getElementById('status-text').textContent = 'Closed';
+    const blink = p.querySelector('.blink');
+    if (blink) blink.style.display = 'none';
+  }
+}
+
+// ── 開始即時監聽（取代 setInterval）────────────────────
+function listenToEnquiry(docId) {
+  if (unsubscribe) unsubscribe(); // 先取消舊的監聽
+  unsubscribe = onSnapshot(doc(db, 'enquiries', docId), (snapshot) => {
+    if (!snapshot.exists()) return;
+    const data = snapshot.data();
+    messages = data.messages || [];
+    render();
+    // 賣家在後台把狀態改成 closed，前端即時反映
+    if (data.status === 'closed' && !closed) {
+      setUItoClosed();
+      messages.push({ role:'system', text:'This enquiry has been resolved and closed. Thank you for contacting Maison Horlogère.' });
+      render();
+    }
+  });
+}
+
+// ── 送出新詢問 ─────────────────────────────────────────
+window.submitForm = async function() {
+  const fn    = document.getElementById('fname').value.trim();
+  const ln    = document.getElementById('lname').value.trim();
   const email = document.getElementById('email').value.trim();
-  const sub = document.getElementById('subject').value.trim();
-  const msg = document.getElementById('message').value.trim();
-  const type= document.getElementById('issue-type').value;
-  if(!sub||!msg){ alert('Please complete the subject and message fields.'); return; }
+  const sub   = document.getElementById('subject').value.trim();
+  const msg   = document.getElementById('message').value.trim();
+  const type  = document.getElementById('issue-type').value;
+
+  if (!sub || !msg) { alert('Please complete the subject and message fields.'); return; }
 
   const btn = document.querySelector('.submit-btn');
-  btn.disabled=true; btn.querySelector('span').textContent='Sending…';
+  btn.disabled = true;
+  btn.querySelector('span').textContent = 'Sending…';
 
   try {
-    const ref='MH-'+Date.now().toString().slice(-6);
-    const t=ts();
-    const docRef = await addDoc(collection(db,'enquiries'),{
-      ref, subject:sub, type, status:'open',
-      name:(fn+' '+ln).trim()||'Anonymous',
-      email: email||'—',
-      messages:[{role:'client',text:msg,time:t}],
+    const ref = 'MH-' + Date.now().toString().slice(-6);
+    const t   = ts();
+    const docRef = await addDoc(collection(db, 'enquiries'), {
+      ref,
+      subject:  sub,
+      type,
+      status:   'open',
+      name:     (fn + ' ' + ln).trim() || 'Anonymous',
+      email:    email || '—',
+      messages: [{ role:'client', text:msg, time:t }],
       createdAt: serverTimestamp(),
     });
+
     currentDocId = docRef.id;
-    messages=[{role:'client',text:msg,time:t}];
-    document.getElementById('ticket-subject-display').textContent=sub;
-    document.getElementById('ticket-meta').textContent='Reference '+ref+' · Submitted '+t;
-    document.getElementById('ref-no').textContent=ref;
-    document.getElementById('ref-type').textContent=type;
-    document.getElementById('ref-client').textContent=(fn+' '+ln).trim()||'Anonymous';
-    document.getElementById('ref-time').textContent=t;
-    document.getElementById('new-form-view').style.display='none';
-    document.getElementById('ticket-view').style.display='block';
-    render();
-    // 每 15 秒重新讀取 Firestore，讓買家看到賣家的回覆
-    window._pollInterval = setInterval(async () => {
-      if(closed) { clearInterval(window._pollInterval); return; }
-      try {
-        const snap = await getDoc(doc(db,'enquiries',currentDocId));
-        if(snap.exists()){
-          messages = snap.data().messages || [];
-          render();
-        }
-      } catch(_){}
-    }, 15000);
-  } catch(e){
-    alert('Failed to send: '+e.message);
-    btn.disabled=false; btn.querySelector('span').textContent='Send Enquiry';
+
+    // 更新 UI
+    document.getElementById('ticket-subject-display').textContent = sub;
+    document.getElementById('ticket-meta').textContent = 'Reference ' + ref + ' · Submitted ' + t;
+    document.getElementById('ref-no').textContent = ref;
+    document.getElementById('ref-type').textContent = type;
+    document.getElementById('ref-client').textContent = (fn + ' ' + ln).trim() || 'Anonymous';
+    document.getElementById('ref-time').textContent = t;
+    document.getElementById('new-form-view').style.display = 'none';
+    document.getElementById('ticket-view').style.display = 'block';
+
+    // 開始即時監聽，賣家回覆後立刻更新畫面
+    listenToEnquiry(currentDocId);
+
+  } catch(e) {
+    alert('Failed to send: ' + e.message);
+    btn.disabled = false;
+    btn.querySelector('span').textContent = 'Send Enquiry';
   }
 };
 
-// ── 買家回覆 → 存進 Firestore ──────────────────────────
-window.sendReply = async function(){
-  if(closed) return;
-  const inp = document.getElementById('reply-input');
-  const t   = inp.value.trim();
-  if(!t) return;
-  const entry = {role:'client', text:t, time:ts()};
+// ── 買家回覆 ───────────────────────────────────────────
+window.sendReply = async function() {
+  if (closed) return;
+  const inp   = document.getElementById('reply-input');
+  const text  = inp.value.trim();
+  if (!text) return;
+
+  const entry = { role:'client', text, time:ts() };
   try {
-    await updateDoc(doc(db,'enquiries', currentDocId), {
+    await updateDoc(doc(db, 'enquiries', currentDocId), {
       messages: arrayUnion(entry)
     });
-    messages.push(entry);
-    inp.value='';
-    render();
-  } catch(e){
-    alert('Failed to send reply: '+e.message);
+    inp.value = '';
+    // 不需要手動 push + render，onSnapshot 會自動觸發
+  } catch(e) {
+    alert('Failed to send reply: ' + e.message);
   }
 };
-window.closeTicket = function(){
-  if(closed)return; closed=true;
-  messages.push({role:'system',text:'This enquiry has been resolved and closed. Thank you for contacting Maison Horlogère.'});
-  const p=document.getElementById('status-pill');
-  p.className='status-pill closed';
-  document.getElementById('status-text').textContent='Closed';
-  p.querySelector('.blink').style.display='none';
+
+// ── 關閉（前端按鈕，買家端不應該有，保留備用）─────────
+window.closeTicket = function() {
+  if (closed) return;
+  setUItoClosed();
+  messages.push({ role:'system', text:'This enquiry has been resolved and closed. Thank you for contacting Maison Horlogère.' });
   render();
 };
-window.newEnquiry = function(){
-  clearInterval(window._pollInterval);
-  document.getElementById('ticket-view').style.display='none';
-  document.getElementById('new-form-view').style.display='block';
-  messages=[]; closed=false; currentDocId=null;
+
+// ── 開新詢問 ───────────────────────────────────────────
+window.newEnquiry = function() {
+  if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+  document.getElementById('ticket-view').style.display = 'none';
+  document.getElementById('new-form-view').style.display = 'block';
+  messages = []; closed = false; currentDocId = null;
 };
+</script>
+</body>
+</html>
